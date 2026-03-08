@@ -8,6 +8,7 @@ dotenv.config();
 const VolunteerHubApiKey = process.env.VOLUNTEERHUB_API_KEY;
 const app = express(); // think of app as an express object
 app.use(cors());
+
 // req --> what the client sent
 // res --> what im sending back to the client
 // here, we are telling express what to do when it recieves a GET request for "/events"

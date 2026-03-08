@@ -17,27 +17,29 @@ function getHostPort() {
     return "localhost:3000";
 }
 
-const fetchEvents = async () => {
-    // setIsLoading(true);
-    try {
-        const hostPort = getHostPort();
-        console.log("host port: " + hostPort);
-        const response = await fetch("http://" + hostPort + "/events");
-        const data = await response.json();
-        setEvents(data); // currently not cleaning data. just want to see if i am using api correct first
-        console.log("success fetching data");
-    }
-    catch {
-        console.log("fialed to fetch events");
-    }
-    finally {
-        // setIsLoading(false);
-    }
-}
 
-export default function printEvents(){
+
+export default function PrintEvents(){
     const [events, setEvents] = useState([]);
     // const [isLoading, setIsLoading] = useState(true);
+
+    const fetchEvents = async () => {
+        // setIsLoading(true);
+        try {
+            const hostPort = getHostPort();
+            console.log("host port: " + hostPort);
+            const response = await fetch("http://" + hostPort + "/events");
+            const data = await response.json();
+            setEvents(data); // currently not cleaning data. just want to see if i am using api correct first
+            console.log("success fetching data");
+        }
+        catch {
+            console.log("fialed to fetch events");
+        }
+        finally {
+            // setIsLoading(false);
+        }
+    }
     
     useEffect(() => {
 	  fetchEvents();
@@ -52,7 +54,7 @@ export default function printEvents(){
             alignItems: "center",
             }}
         >
-            <Text>{JSON.stringify(events, null, 2)}</Text>
+            <Text>{JSON.stringify(events)}</Text>
         </View>
         </SafeAreaView> 
     );
