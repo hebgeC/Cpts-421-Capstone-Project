@@ -1,6 +1,7 @@
 import { Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 function getHostPort() {
     const os = Platform.OS;
@@ -17,27 +18,23 @@ function getHostPort() {
     return "localhost:3000";
 }
 
-
-
 export default function PrintEvents(){
     const [events, setEvents] = useState([]);
-    // const [isLoading, setIsLoading] = useState(true);
 
     const fetchEvents = async () => {
-        // setIsLoading(true);
         try {
             const hostPort = getHostPort();
             console.log("host port: " + hostPort);
-            const response = await fetch("http://" + hostPort + "/events");
-            const data = await response.json();
-            setEvents(data); // currently not cleaning data. just want to see if i am using api correct first
+
+            const response = await axios.get("http://" + hostPort + "/events");
+
+            setEvents(response.data);
+
             console.log("success fetching data");
         }
-        catch {
-            console.log("fialed to fetch events");
-        }
-        finally {
-            // setIsLoading(false);
+        catch (err) {
+            console.log("failed to fetch events");
+            console.log(err.message);
         }
     }
     
