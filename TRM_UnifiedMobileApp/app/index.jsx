@@ -1,20 +1,15 @@
-import { Text, View } from "react-native";
+import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import EventList from "../components/EventList"
+import CalendarView from "../components/CalendarView";
 
 export default function Index() {
   return (
-    <SafeAreaView>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text>Edit app/index.tsx to edit this screen.</Text>
-        <EventList/>
-      </View>
-    </SafeAreaView> 
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <View style={{ flex: 1 }}>
+          <CalendarView />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
