@@ -69,15 +69,16 @@ export default function CalendarView() {
     const updateCurrentMonth = (month, year) => {
         setCurrentMonth(month);
         setCurrentYear(year);
-        fetchEventsForMonth(month, year);
     };
 
     const fetchEventsForMonth = async (month, year) => {
+        console.log(`fetching events for ${MONTHS[month]} ${year}`);
         const lastDay = new Date(year, month + 1, 0).getDate();
         const earliestTime = new Date(year, month, 1, 0, 0).toISOString();
         const latestTime = new Date(year, month, lastDay, 23, 59).toISOString();
 
         const MAX_PAGES = 10;
+        const HARD_PAGES_CAP = 20;
         const requests = Array.from({ length: MAX_PAGES }, (_, page) =>
             axios
                 .get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)
@@ -86,7 +87,29 @@ export default function CalendarView() {
         );
 
         const results = await Promise.all(requests);
+        
         setEvents(results.flat());
+
+        // check if there are more than 10 pages worht of events (50 events per page)
+        if (results[MAX_PAGES - 1].length === 50)
+        {
+            let page = MAX_PAGES + 1;
+            // need to keep fetching events
+            while (page < HARD_PAGES_CAP)
+            {
+                let data = (await axios.get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)).data;
+                results.push(data);
+
+                if (data.length < 50)
+                {
+                    break;
+                }
+
+                ++page;
+            }
+
+            setEvents(results.flat());
+        }
     }
 
     const getEventsForDay = (day) => {
