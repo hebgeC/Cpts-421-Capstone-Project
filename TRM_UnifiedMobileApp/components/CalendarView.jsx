@@ -5,7 +5,6 @@ import {
     TouchableOpacity,
     ScrollView,
     StyleSheet,
-    Alert,
 } from "react-native";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -14,7 +13,12 @@ import DetailModal from "./DetailModal";
 
 function getHostPort() {
     const os = Platform.OS;
-    if (os === "android") return "10.0.2.2:3000";
+    console.log(os);
+    if (os === "android")
+    {
+        return "10.0.2.2:3000";
+    }
+
     return "localhost:3000";
 }
 
@@ -69,21 +73,17 @@ export default function CalendarView() {
     };
 
     const fetchEventsForMonth = async (month, year) => {
-        const numDays = new Date(year, month + 1, 0).getDate();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const earliestTime = new Date(year, month, 1, 0, 0).toISOString();
+        const latestTime = new Date(year, month, lastDay, 23, 59).toISOString();
 
-        const requests = Array.from({ length: numDays }, (_, i) => {
-            const day = i + 1;
-            const earliestTime = new Date(year, month, day, 0, 0).toISOString();
-            const latestTime = new Date(year, month, day, 23, 59).toISOString();
-
-            return axios
-                .get(`http://${HOSTPORT}/volunteerShiftEvent/${earliestTime}/${latestTime}`)
-                .then((response) => response.data)
-                .catch((err) => {
-                    console.log("Failed to fetch events:", err.message);
-                    return [];
-                });
-        });
+        const MAX_PAGES = 10;
+        const requests = Array.from({ length: MAX_PAGES }, (_, page) =>
+            axios
+                .get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)
+                .then(({ data }) => (Array.isArray(data) ? data : []))
+                .catch(() => [])
+        );
 
         const results = await Promise.all(requests);
         setEvents(results.flat());
@@ -169,13 +169,11 @@ export default function CalendarView() {
         {
             openSlots = 0;
         }
-        setDetailsOpenSlots(openSlots);
 
+        setDetailsOpenSlots(openSlots);
         setDetailsDescription(event.ShortDescription);
         setDetailsID(event.EventUid);
     }
-
-
 
     // Build flat array of day cells (null = padding, number = day of month)
     const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();

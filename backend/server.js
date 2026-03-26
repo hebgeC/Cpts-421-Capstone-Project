@@ -81,4 +81,30 @@ app.get("/volunteerShiftEvent/:earliestTime/:latestTime", async (req, res) => {
 
 });
 
+app.get("/volunteerShiftEvent/:page/:earliestTime/:latestTime", async (req, res) => {
+
+  try {
+    const earliestTime = req.params.earliestTime.replaceAll(":", "%3A");
+    const latestTime = req.params.latestTime.replaceAll(":", "%3A");
+    const page = req.params.page;
+
+    const response = await axios.get(
+      `https://rescue-mission.volunteerhub.com/api/v1/events?query=Time&page=${page}&pageSize=50&earliestTime=${earliestTime}&latestTime=${latestTime}`,
+      {
+        headers: {
+          Authorization: VolunteerHubApiKey,
+        },
+      }
+    );
+
+    res.json(response.data);
+  }
+  catch (err)
+  {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to fetch events" });
+  }
+
+});
+
 app.listen(3000, () => console.log("Server running on port 3000"));
