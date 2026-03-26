@@ -5,11 +5,12 @@ import {
     TouchableOpacity,
     ScrollView,
     StyleSheet,
-    Modal,
-    FlatList,
+    Alert,
 } from "react-native";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import MonthYearPicker from "./MonthYearPicker";
+import DetailModal from "./DetailModal";
 
 function getHostPort() {
     const os = Platform.OS;
@@ -27,7 +28,6 @@ const MONTHS = [
 ];
 
 const TODAY = new Date();
-const YEAR_RANGE = Array.from({ length: 21 }, (_, i) => TODAY.getFullYear() - 7 + i);
 
 export default function CalendarView() {
     // date state
@@ -38,13 +38,17 @@ export default function CalendarView() {
     // events state
     const [events, setEvents] = useState([]);
 
-    // Picker state
-    const [pickerVisible, setPickerVisible] = useState(false);
-    const [pickerMonth, setPickerMonth] = useState(TODAY.getMonth());
-    const [pickerYear, setPickerYear] = useState(TODAY.getFullYear());
+    // event details
+    const [detailsTitle, setDetailsTitle] = useState("title");
+    const [detailsTime, setDetailsTime] = useState("time");
+    const [detailsLocation, setDetailsLocation] = useState("location");
+    const [detailsOpenSlots, setDetailsOpenSlots] = useState("open slots");
+    const [detailsDescription, setDetailsDescription] = useState("description");
+    const [detailsID, setDetailsID] = useState("");
 
-    const monthListRef = useRef(null);
-    const yearListRef = useRef(null);
+    // conditional rendering
+    const [detailsVisible, setDetailsVisible] = useState(false);
+    const [pickerVisible, setPickerVisible] = useState(false);
 
     const fetchEvents = async () => {
         try {
@@ -108,59 +112,70 @@ export default function CalendarView() {
         fetchEventsForMonth(currentMonth, currentYear);
     }, [currentMonth, currentYear]);
 
-    // Scroll picker lists to the selected item when the modal opens
-    useEffect(() => {
-        if (pickerVisible) {
-            setTimeout(() => {
-                monthListRef.current?.scrollToIndex({
-                    index: pickerMonth,
-                    animated: false,
-                    viewPosition: 0.5,
-                });
-                const yearIdx = YEAR_RANGE.indexOf(pickerYear);
-                if (yearIdx >= 0) {
-                    yearListRef.current?.scrollToIndex({
-                        index: yearIdx,
-                        animated: false,
-                        viewPosition: 0.5,
-                    });
-                }
-            }, 50);
-        }
-    }, [pickerVisible]);
-
     const openPicker = () => {
-        setPickerMonth(currentMonth);
-        setPickerYear(currentYear);
         setPickerVisible(true);
     };
 
-    const confirmPicker = () => {
-        updateCurrentMonth(pickerMonth, pickerYear);
-        setCurrentYear(pickerYear);
+    const confirmPicker = (month, year) => {
+        updateCurrentMonth(month, year);
         setSelectedDate(null);
         setPickerVisible(false);
     };
 
     const prevMonth = () => {
         if (currentMonth === 0) {
-            updateCurrentMonth(11, pickerYear);
-            setCurrentYear(currentYear - 1);
+            updateCurrentMonth(11, currentYear - 1);
         } else {
-            updateCurrentMonth(currentMonth - 1, pickerYear);
+            updateCurrentMonth(currentMonth - 1, currentYear);
         }
         setSelectedDate(null);
     };
 
     const nextMonth = () => {
         if (currentMonth === 11) {
-            updateCurrentMonth(0, pickerYear);
-            setCurrentYear(currentYear + 1);
+            updateCurrentMonth(0, currentYear + 1);
         } else {
-            updateCurrentMonth(currentMonth + 1, pickerYear);
+            updateCurrentMonth(currentMonth + 1, currentYear);
         }
         setSelectedDate(null);
     };
+
+    const countRegistrations = (event) => {
+        let count = 0;
+
+        for (const group of event.UserGroupRegistrations || []) 
+        {
+            for (const user of group.UserRegistrations || [])
+            {
+                if (!user.Deleted) 
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    };
+
+    const onEventSelected = (event, time) => {
+        setDetailsVisible(true);
+        setDetailsTitle(event.Name);
+        setDetailsTime(time);
+        setDetailsLocation(event.Location);
+
+        const registrations = countRegistrations(event);
+        let openSlots = event.SlotLimit - registrations;
+        if (openSlots < 0)
+        {
+            openSlots = 0;
+        }
+        setDetailsOpenSlots(openSlots);
+
+        setDetailsDescription(event.ShortDescription);
+        setDetailsID(event.EventUid);
+    }
+
+
 
     // Build flat array of day cells (null = padding, number = day of month)
     const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
@@ -185,116 +200,24 @@ export default function CalendarView() {
 
     return (
         <View style={styles.container}>
-            {/* ── Month/Year Picker Modal ── */}
-            <Modal
+            <MonthYearPicker
                 visible={pickerVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setPickerVisible(false)}
+                currentMonth={currentMonth}
+                currentYear={currentYear}
+                onConfirm={confirmPicker}
+                onCancel={() => setPickerVisible(false)}
+            />
 
-            >
-                <TouchableOpacity
-                    style={styles.modalBackdrop}
-                    activeOpacity={1}
-                    onPress={() => setPickerVisible(false)}
-                >
-                    <View
-                        style={styles.pickerCard}
-                        // Prevent backdrop tap from closing when pressing the card
-                        onStartShouldSetResponder={() => true}
-                    >
-                        <Text style={styles.pickerTitle}>Select Month & Year</Text>
-
-                        <View style={styles.pickerColumns}>
-                            {/* Month column */}
-                            <FlatList
-                                ref={monthListRef}
-                                data={MONTHS}
-                                keyExtractor={(_, i) => String(i)}
-                                style={styles.pickerList}
-                                showsVerticalScrollIndicator={false}
-                                getItemLayout={(_, index) => ({
-                                    length: PICKER_ITEM_H,
-                                    offset: PICKER_ITEM_H * index,
-                                    index,
-                                })}
-                                renderItem={({ item, index }) => {
-                                    const active = index === pickerMonth;
-                                    return (
-                                        <TouchableOpacity
-                                            onPress={() => setPickerMonth(index)}
-                                            style={[
-                                                styles.pickerItem,
-                                                active && styles.pickerItemActive,
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.pickerItemText,
-                                                    active && styles.pickerItemTextActive,
-                                                ]}
-                                            >
-                                                {item}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                }}
-                            />
-
-                            {/* Year column */}
-                            <FlatList
-                                ref={yearListRef}
-                                data={YEAR_RANGE}
-                                keyExtractor={(y) => String(y)}
-                                style={styles.pickerList}
-                                showsVerticalScrollIndicator={false}
-                                getItemLayout={(_, index) => ({
-                                    length: PICKER_ITEM_H,
-                                    offset: PICKER_ITEM_H * index,
-                                    index,
-                                })}
-                                renderItem={({ item }) => {
-                                    const active = item === pickerYear;
-                                    return (
-                                        <TouchableOpacity
-                                            onPress={() => setPickerYear(item)}
-                                            style={[
-                                                styles.pickerItem,
-                                                active && styles.pickerItemActive,
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.pickerItemText,
-                                                    active && styles.pickerItemTextActive,
-                                                ]}
-                                            >
-                                                {item}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                }}
-                            />
-                        </View>
-
-                        {/* Actions */}
-                        <View style={styles.pickerActions}>
-                            <TouchableOpacity
-                                onPress={() => setPickerVisible(false)}
-                                style={[styles.pickerBtn, styles.pickerBtnCancel]}
-                            >
-                                <Text style={styles.pickerBtnCancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={confirmPicker}
-                                style={[styles.pickerBtn, styles.pickerBtnConfirm]}
-                            >
-                                <Text style={styles.pickerBtnConfirmText}>Done</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
+            <DetailModal
+                visible={detailsVisible}
+                title={detailsTitle}
+                time={detailsTime}
+                location={detailsLocation}
+                openSlots={detailsOpenSlots}
+                description={detailsDescription}
+                id={detailsID}
+                onClose={() => setDetailsVisible(false)}
+            />
 
             {/* ── Month navigation header ── */}
             <View style={styles.header}>
@@ -379,16 +302,19 @@ export default function CalendarView() {
                                 const end = new Date(event.EndTime);
                                 const duration = `${start.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})} - ${end.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`
                             
+                                // this is the event component 
                                 return (
-                                    <View key={idx} style={styles.eventCard}>
-                                        <Text style={styles.eventTitle}>
-                                            {event.Name ?? "Untitled Event"}
-                                        </Text>
-                                        {duration && (
-                                            <Text style={styles.eventTime}>
-                                                {duration}
+                                    <View key={idx} style={styles.eventCard} >
+                                        <TouchableOpacity onPress={() => onEventSelected(event, duration)}>
+                                            <Text style={styles.eventTitle}>
+                                                {event.Name ?? "Untitled Event"}
                                             </Text>
-                                        )}
+                                            {duration && (
+                                                <Text style={styles.eventTime}>
+                                                    {duration}
+                                                </Text>
+                                            )}
+                                        </TouchableOpacity>
                                     </View>
                                 );
                             })}
@@ -399,8 +325,6 @@ export default function CalendarView() {
         </View>
     );
 }
-
-const PICKER_ITEM_H = 44;
 
 const styles = StyleSheet.create({
     container: {
@@ -413,84 +337,6 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 3 },
         elevation: 3,
-    },
-
-    // ── Picker modal ──
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    pickerCard: {
-        width: 320,
-        backgroundColor: "#fff",
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 10,
-    },
-    pickerTitle: {
-        fontSize: 16,
-        fontWeight: "700",
-        color: "#1a1a1a",
-        textAlign: "center",
-        marginBottom: 14,
-    },
-    pickerColumns: {
-        flexDirection: "row",
-        height: PICKER_ITEM_H * 5,
-    },
-    pickerList: {
-        flex: 1,
-    },
-    pickerItem: {
-        height: PICKER_ITEM_H,
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 8,
-        marginHorizontal: 4,
-    },
-    pickerItemActive: {
-        backgroundColor: "#4a90e2",
-    },
-    pickerItemText: {
-        fontSize: 15,
-        color: "#444",
-    },
-    pickerItemTextActive: {
-        color: "#fff",
-        fontWeight: "700",
-    },
-    pickerActions: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        marginTop: 16,
-        gap: 10,
-    },
-    pickerBtn: {
-        paddingVertical: 9,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-    },
-    pickerBtnCancel: {
-        backgroundColor: "#f0f0f0",
-    },
-    pickerBtnCancelText: {
-        fontSize: 14,
-        color: "#555",
-        fontWeight: "600",
-    },
-    pickerBtnConfirm: {
-        backgroundColor: "#4a90e2",
-    },
-    pickerBtnConfirmText: {
-        fontSize: 14,
-        color: "#fff",
-        fontWeight: "700",
     },
 
     // ── Header ──
@@ -512,7 +358,7 @@ const styles = StyleSheet.create({
     },
     monthYearCaret: {
         fontSize: 12,
-        color: "#4a90e2",
+        color: "#004953",
         marginTop: 2,
     },
     navBtn: {
@@ -520,7 +366,7 @@ const styles = StyleSheet.create({
     },
     navArrow: {
         fontSize: 26,
-        color: "#4a90e2",
+        color: "#004953",
         lineHeight: 28,
     },
 
@@ -545,17 +391,17 @@ const styles = StyleSheet.create({
         margin: 2,
     },
     todayCell: {
-        backgroundColor: "#e8f0fe",
+        backgroundColor: "#e6eff1",
     },
     selectedCell: {
-        backgroundColor: "#4a90e2",
+        backgroundColor: "#004953",
     },
     dayText: {
         fontSize: 14,
         color: "#333333",
     },
     todayText: {
-        color: "#4a90e2",
+        color: "#004953",
         fontWeight: "700",
     },
     selectedText: {
@@ -566,7 +412,7 @@ const styles = StyleSheet.create({
         width: 5,
         height: 5,
         borderRadius: 3,
-        backgroundColor: "#4a90e2",
+        backgroundColor: "#8E9300",
         marginTop: 2,
     },
     dotSelected: {
@@ -595,12 +441,12 @@ const styles = StyleSheet.create({
         maxHeight: 200,
     },
     eventCard: {
-        backgroundColor: "#f0f6ff",
+        backgroundColor: "#f3f4e8",
         borderRadius: 8,
         padding: 10,
         marginBottom: 8,
         borderLeftWidth: 3,
-        borderLeftColor: "#4a90e2",
+        borderLeftColor: "#8E9300",
     },
     eventTitle: {
         fontSize: 14,
