@@ -19,7 +19,7 @@ app.get("/volunteerShiftEvent", async (req, res) => {
       "https://rescue-mission.volunteerhub.com/api/v1/events?query=Version&page=1&pageSize=20&earliestVersion=0",
       {
         headers: {
-          Authorization: VolunteerHubApiKey,
+          Authorization: VolunteerHubApiKey
         },
       }
     );
