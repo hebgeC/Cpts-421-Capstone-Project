@@ -1,0 +1,13 @@
+{
+  "name": "trm-app-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "backend": "npm --prefix backend run start",
+    "frontend": "npm --prefix frontend run start",
+    "start": "concurrently -k -n backend,frontend -c green,cyan \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
