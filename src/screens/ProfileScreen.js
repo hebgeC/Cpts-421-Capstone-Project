@@ -9,7 +9,7 @@ import React, { useContext } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 
 const SETTINGS = [

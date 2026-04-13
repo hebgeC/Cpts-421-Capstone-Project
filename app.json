@@ -1,4 +1,25 @@
 {
-  "name": "TacomaRescueMission",
-  "displayName": "Tacoma Rescue Mission"
+  "expo": {
+    "name": "Tacoma Rescue Mission",
+    "slug": "tacoma-rescue-mission",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tacomarescuemission"
+    },
+    "android": {
+      "package": "com.tacomarescuemission",
+      "adaptiveIcon": {
+        "backgroundColor": "#FDF6F0"
+      }
+    },
+    "splash": {
+      "backgroundColor": "#FDF6F0"
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
+  }
 }

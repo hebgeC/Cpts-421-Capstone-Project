@@ -4,7 +4,7 @@ import {
   SafeAreaView, Linking, TextInput, Image, ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 
 const EVENTS_URL = 'https://www.trm.org/events/';
 
