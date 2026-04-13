@@ -9,6 +9,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ExploreScreen from './src/screens/ExploreScreen';
 import EventsScreen from './src/screens/EventsScreen';
+import VolunteerScreen from './src/screens/VolunteerScreen';
 import ArticleScreen from './src/screens/ArticleScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import BookmarksScreen from './src/screens/BookmarksScreen';
@@ -56,6 +57,7 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Events" component={EventsScreen} />
+      <Tab.Screen name="Volunteer" component={VolunteerScreen} />
       <Tab.Screen name="Saved" component={BookmarksScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
