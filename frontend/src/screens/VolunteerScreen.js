@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import CalendarView from '../components/CalendarView';
 
 export default function VolunteerScreen() {
@@ -9,13 +9,9 @@ export default function VolunteerScreen() {
                 <Text style={styles.pageTitle}>Volunteer Shifts</Text>
                 <Text style={styles.pageSubtitle}>Browse and sign up for open volunteer shifts</Text>
             </View>
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.content}>
                 <CalendarView />
-                <View style={{ height: 30 }} />
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
@@ -44,6 +40,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     content: {
+        flex: 1,
         padding: 16,
     },
 });

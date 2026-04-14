@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     pickerTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#1a1a1a",
+        color: "#2C1810",
         textAlign: "center",
         marginBottom: 14,
     },
@@ -197,11 +197,11 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
     },
     pickerItemActive: {
-        backgroundColor: "#004953",
+        backgroundColor: "#C0392B",
     },
     pickerItemText: {
         fontSize: 15,
-        color: "#444",
+        color: "#2C1810",
     },
     pickerItemTextActive: {
         color: "#fff",
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     pickerBtnCancel: {
-        backgroundColor: "#f0f0f0",
+        backgroundColor: "#EBEBEB",
     },
     pickerBtnCancelText: {
         fontSize: 14,
-        color: "#555",
+        color: "#8B6B5A",
         fontWeight: "600",
     },
     pickerBtnConfirm: {
-        backgroundColor: "#004953",
+        backgroundColor: "#C0392B",
     },
     pickerBtnConfirmText: {
         fontSize: 14,

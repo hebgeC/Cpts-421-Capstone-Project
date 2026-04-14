@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     },
     accentBar: {
         height: 5,
-        backgroundColor: "#004953",
+        backgroundColor: "#C0392B",
     },
     scrollContent: {
         padding: 24,
@@ -144,13 +144,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 22,
         fontWeight: "800",
-        color: "#1a1a1a",
+        color: "#2C1810",
         textAlign: "center",
         lineHeight: 28,
     },
     divider: {
         height: 1,
-        backgroundColor: "#eef0f4",
+        backgroundColor: "#EBEBEB",
         marginVertical: 16,
     },
     fieldRow: {
@@ -160,7 +160,8 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: "row",
-        alignItems: "center", 
+        alignItems: "center",
+        justifyContent: "center",
     },
     fieldIcon: {
         fontSize: 18,
@@ -173,41 +174,41 @@ const styles = StyleSheet.create({
     fieldLabel: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#9aa0ab",
+        color: "#AAAAAA",
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 2,
     },
     fieldText: {
         fontSize: 15,
-        color: "#2c2c2c",
+        color: "#2C1810",
         lineHeight: 22,
     },
     descriptionLabel: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#9aa0ab",
+        color: "#AAAAAA",
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 8,
     },
     descriptionBox: {
-        backgroundColor: "#f7f9fc",
+        backgroundColor: "#FDF6F0",
         borderRadius: 12,
         padding: 14,
         borderWidth: 1,
-        borderColor: "#eef0f4",
+        borderColor: "#EBEBEB",
     },
     descriptionBase: {
         fontSize: 14,
-        color: "#3a3a3a",
+        color: "#2C1810",
         lineHeight: 22,
     },
     closeBtn: {
         margin: 16,
         marginTop: 16,
         alignSelf: "center",
-        backgroundColor: "#004953",
+        backgroundColor: "#C0392B",
         paddingVertical: 12,
         paddingHorizontal: 36,
         borderRadius: 10,

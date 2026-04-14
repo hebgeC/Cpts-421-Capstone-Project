@@ -1,55 +1,113 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, ActivityIndicator, Alert,
+  SafeAreaView, ActivityIndicator, Modal, Platform,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
+import { WebView } from 'react-native-webview';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 
-// TRM's specific VolunteerHub login URL — found on trm.org/volunteer
 const LOGIN_URL = 'https://rescue-mission.volunteerhub.com/account/signin?ReturnUrl=%2f';
+
+// Injected after page load to read the logged-in user's display name from the VH nav bar
+const EXTRACT_USER_JS = `
+  (function() {
+    const nameEl = document.querySelector('.user-name, .volunteer-name, [data-user-name], .nav-user .name, .header-user-name');
+    const name = nameEl ? nameEl.innerText.trim() : null;
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'USER_INFO', name }));
+  })();
+  true;
+`;
+
+function isLoginSuccess(url) {
+  if (!url) return false;
+  // Logged in when we're on the VH domain and NOT on a sign-in or BetterGood page
+  return url.includes('https://rescue-mission.volunteerhub.com/vv2');
+}
 
 export default function LoginScreen() {
   const { setIsLoggedIn, setUser } = useContext(AuthContext);
-  const [loading, setLoading] = useState(false);
+  const [webViewVisible, setWebViewVisible] = useState(false);
+  const [webViewLoading, setWebViewLoading] = useState(true);
+  const webViewRef = useRef(null);
 
-  const handleSignIn = async () => {
-    setLoading(true);
+  const handleNavigationChange = (navState) => {
+    if (isLoginSuccess(navState.url)) {
+      // Inject JS to try to read the user's name from the page
+      webViewRef.current?.injectJavaScript(EXTRACT_USER_JS);
+    }
+  };
+
+  const handleMessage = (event) => {
     try {
-      await WebBrowser.openBrowserAsync(LOGIN_URL);
-      // Browser has closed — ask the user if they completed sign-in
-      Alert.alert(
-        'Did you sign in?',
-        'If you completed sign-in on the VolunteerHub page, tap Continue to access your account.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Continue',
-            onPress: () => {
-              setUser({
-                token: 'volunteerhub-session',
-                displayName: 'Volunteer',
-                source: 'volunteerhub',
-                portalUrl: LOGIN_URL,
-              });
-              setIsLoggedIn(true);
-            },
-          },
-        ]
-      );
-    } catch (e) {
-      Alert.alert(
-        'Connection Error',
-        'Could not load the sign in page. Please check your internet connection.',
-      );
-    } finally {
-      setLoading(false);
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.type === 'USER_INFO') {
+        setWebViewVisible(false);
+        setUser({
+          displayName: msg.name || 'Volunteer',
+          source: 'volunteerhub',
+        });
+        setIsLoggedIn(true);
+      }
+    } catch (_) {}
+  };
+
+  // Fallback: if JS message never fires but URL is already the dashboard, complete login
+  const handleLoadEnd = (syntheticEvent) => {
+    setWebViewLoading(false);
+    const { url } = syntheticEvent.nativeEvent;
+    if (isLoginSuccess(url)) {
+      webViewRef.current?.injectJavaScript(EXTRACT_USER_JS);
     }
   };
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* ── Login WebView Modal ── */}
+      <Modal
+        visible={webViewVisible}
+        animationType="slide"
+        onRequestClose={() => setWebViewVisible(false)}
+      >
+        <SafeAreaView style={styles.webViewSafe}>
+          {/* Header bar */}
+          <View style={styles.webViewHeader}>
+            <TouchableOpacity
+              onPress={() => setWebViewVisible(false)}
+              style={styles.webViewCancelBtn}
+            >
+              <Icon name="close" size={22} color="#2C1810" />
+            </TouchableOpacity>
+            <Text style={styles.webViewTitle}>Sign In to VolunteerHub</Text>
+            <View style={{ width: 38 }} />
+          </View>
+
+          {webViewLoading && (
+            <View style={styles.webViewLoadingOverlay}>
+              <ActivityIndicator size="large" color="#C0392B" />
+            </View>
+          )}
+
+          <WebView
+            ref={webViewRef}
+            source={{ uri: LOGIN_URL }}
+            onNavigationStateChange={handleNavigationChange}
+            onLoadEnd={handleLoadEnd}
+            onMessage={handleMessage}
+            onLoadStart={() => setWebViewLoading(true)}
+            sharedCookiesEnabled={true}
+            thirdPartyCookiesEnabled={true}
+            userAgent={
+              Platform.OS === 'android'
+                ? 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36'
+                : 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'
+            }
+            style={{ flex: 1 }}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* ── Landing screen ── */}
       <View style={styles.accentBar} />
 
       <View style={styles.topSection}>
@@ -68,18 +126,11 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.loginBtn}
-          onPress={handleSignIn}
+          onPress={() => { setWebViewLoading(true); setWebViewVisible(true); }}
           activeOpacity={0.9}
-          disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <Icon name="log-in-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.loginBtnText}>Sign In with VolunteerHub</Text>
-            </>
-          )}
+          <Icon name="log-in-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.loginBtnText}>Sign In with VolunteerHub</Text>
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
@@ -90,7 +141,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.guestBtn}
-          onPress={() => setIsLoggedIn(true)}
+          onPress={() => { setUser({ displayName: 'Guest', source: 'guest' }); setIsLoggedIn(true); }}
         >
           <Text style={styles.guestBtnText}>Continue as Guest</Text>
         </TouchableOpacity>
@@ -106,6 +157,23 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FDF6F0' },
+
+  // ── WebView Modal ──
+  webViewSafe: { flex: 1, backgroundColor: '#FFFFFF' },
+  webViewHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    backgroundColor: '#FFFFFF',
+  },
+  webViewCancelBtn: { padding: 6 },
+  webViewTitle: { fontSize: 15, fontWeight: '700', color: '#2C1810' },
+  webViewLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    alignItems: 'center', justifyContent: 'center',
+    zIndex: 10,
+  },
   accentBar: { height: 4, backgroundColor: '#C0392B' },
   topSection: {
     alignItems: 'center', paddingTop: 60, paddingBottom: 36, paddingHorizontal: 24,

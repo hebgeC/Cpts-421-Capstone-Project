@@ -37,7 +37,7 @@ export default function CalendarView() {
     // date state
     const [currentMonth, setCurrentMonth] = useState(TODAY.getMonth());
     const [currentYear, setCurrentYear] = useState(TODAY.getFullYear());
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(TODAY.getDate());
 
     // events state
     const [events, setEvents] = useState([]);
@@ -113,16 +113,14 @@ export default function CalendarView() {
     }
 
     const getEventsForDay = (day) => {
-        if (!day)
-        {
+        if (!day) {
             return [];
         }
 
         const target = new Date(currentYear, currentMonth, day).toISOString().slice(0, 10);
 
         return events.filter((event) => {
-            if (!event.StartTime) 
-            {
+            if (!event.StartTime) {
                 return false;
             }
 
@@ -221,6 +219,7 @@ export default function CalendarView() {
 
     return (
         <View style={styles.container}>
+            {/* ── Modals ── */}
             <MonthYearPicker
                 visible={pickerVisible}
                 currentMonth={currentMonth}
@@ -240,6 +239,8 @@ export default function CalendarView() {
                 onClose={() => setDetailsVisible(false)}
             />
 
+            {/* ── Sticky top: navigation + grid ── */}
+            <View style={styles.gridSection}>
             {/* ── Month navigation header ── */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
@@ -308,24 +309,34 @@ export default function CalendarView() {
                 </View>
             ))}
 
-            {/* ── Event list for selected day ── */}
-            {selectedDate !== null && (
-                <View style={styles.eventSection}>
-                    <Text style={styles.eventHeader}>
-                        {MONTHS[currentMonth]} {selectedDate}, {currentYear}
-                    </Text>
-                    {selectedEvents.length === 0 ? (
-                        <Text style={styles.noEvents}>No events scheduled</Text>
-                    ) : (
-                        <ScrollView style={styles.eventScroll}>
-                            {selectedEvents.map((event, idx) => {
+            </View>{/* end gridSection */}
+
+            {/* ── Scrollable event list for selected day ── */}
+            <ScrollView
+                style={styles.eventScroll}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                stickyHeaderIndices={selectedDate !== null ? [0] : []}
+            >
+                {selectedDate !== null && (
+                    <View style={styles.eventHeaderContainer}>
+                        <Text style={styles.eventHeader}>
+                            {MONTHS[currentMonth]} {selectedDate}, {currentYear}
+                        </Text>
+                    </View>
+                )}
+                {selectedDate !== null && (
+                    <View style={styles.eventSection}>
+                        {selectedEvents.length === 0 ? (
+                            <Text style={styles.noEvents}>No events scheduled</Text>
+                        ) : (
+                            selectedEvents.map((event, idx) => {
                                 const start = new Date(event.StartTime);
                                 const end = new Date(event.EndTime);
-                                const duration = `${start.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})} - ${end.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`
-                            
-                                // this is the event component 
+                                const duration = `${start.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})} - ${end.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`;
+
                                 return (
-                                    <View key={idx} style={styles.eventCard} >
+                                    <View key={idx} style={styles.eventCard}>
                                         <TouchableOpacity onPress={() => onEventSelected(event, duration)}>
                                             <Text style={styles.eventTitle}>
                                                 {event.Name ?? "Untitled Event"}
@@ -338,26 +349,35 @@ export default function CalendarView() {
                                         </TouchableOpacity>
                                     </View>
                                 );
-                            })}
-                        </ScrollView>
-                    )}
-                </View>
-            )}
+                            })
+                        )}
+                    </View>
+                )}
+                <View style={{ height: 20 }} />
+            </ScrollView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         width: "100%",
         backgroundColor: "#ffffff",
         borderRadius: 14,
-        padding: 14,
+        overflow: "hidden",
         shadowColor: "#000",
         shadowOpacity: 0.08,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 3 },
         elevation: 3,
+    },
+    gridSection: {
+        backgroundColor: "#FFFFFF",
+        padding: 14,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#EBEBEB",
     },
 
     // ── Header ──
@@ -375,11 +395,11 @@ const styles = StyleSheet.create({
     monthYear: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#1a1a1a",
+        color: "#2C1810",
     },
     monthYearCaret: {
         fontSize: 12,
-        color: "#004953",
+        color: "#C0392B",
         marginTop: 2,
     },
     navBtn: {
@@ -387,7 +407,7 @@ const styles = StyleSheet.create({
     },
     navArrow: {
         fontSize: 26,
-        color: "#004953",
+        color: "#C0392B",
         lineHeight: 28,
     },
 
@@ -400,7 +420,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 12,
         fontWeight: "600",
-        color: "#9e9e9e",
+        color: "#AAAAAA",
         paddingVertical: 4,
     },
     dayCell: {
@@ -412,17 +432,17 @@ const styles = StyleSheet.create({
         margin: 2,
     },
     todayCell: {
-        backgroundColor: "#e6eff1",
+        backgroundColor: "#FDECEA",
     },
     selectedCell: {
-        backgroundColor: "#004953",
+        backgroundColor: "#C0392B",
     },
     dayText: {
         fontSize: 14,
-        color: "#333333",
+        color: "#2C1810",
     },
     todayText: {
-        color: "#004953",
+        color: "#C0392B",
         fontWeight: "700",
     },
     selectedText: {
@@ -433,7 +453,7 @@ const styles = StyleSheet.create({
         width: 5,
         height: 5,
         borderRadius: 3,
-        backgroundColor: "#8E9300",
+        backgroundColor: "#C0392B",
         marginTop: 2,
     },
     dotSelected: {
@@ -441,17 +461,19 @@ const styles = StyleSheet.create({
     },
 
     // ── Event list ──
-    eventSection: {
-        marginTop: 14,
-        borderTopWidth: 1,
-        borderTopColor: "#f0f0f0",
-        paddingTop: 12,
+    eventHeaderContainer: {
+        backgroundColor: "#FFFFFF",
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#EBEBEB",
     },
     eventHeader: {
         fontSize: 15,
         fontWeight: "700",
-        color: "#1a1a1a",
-        marginBottom: 8,
+        color: "#2C1810",
+    },
+    eventSection: {
+        paddingTop: 10,
     },
     noEvents: {
         fontSize: 14,
@@ -459,24 +481,25 @@ const styles = StyleSheet.create({
         fontStyle: "italic",
     },
     eventScroll: {
-        maxHeight: 200,
+        flex: 1,
+        paddingHorizontal: 14,
     },
     eventCard: {
-        backgroundColor: "#f3f4e8",
+        backgroundColor: "#FDECEA",
         borderRadius: 8,
         padding: 10,
         marginBottom: 8,
         borderLeftWidth: 3,
-        borderLeftColor: "#8E9300",
+        borderLeftColor: "#C0392B",
     },
     eventTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#333333",
+        color: "#2C1810",
     },
     eventTime: {
         fontSize: 12,
-        color: "#666666",
+        color: "#8B6B5A",
         marginTop: 3,
     },
 });

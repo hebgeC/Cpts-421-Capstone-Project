@@ -2,11 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   SafeAreaView, Linking, TextInput, Image, ActivityIndicator,
-  RefreshControl,
+  RefreshControl, Platform
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 
-const EVENTS_URL = 'https://www.trm.org/events/';
+function getHostPort() {
+    const os = Platform.OS;
+    console.log(os);
+    if (os === "android")
+    {
+        return "10.0.2.2:3000";
+    }
+
+    return "localhost:3000";
+}
+
+const HOSTPORT = getHostPort();
 
 // Month name -> 3-letter abbreviation lookup
 const MONTH_MAP = {
@@ -146,10 +157,14 @@ export default function EventsScreen() {
   const fetchEvents = useCallback(async () => {
     try {
       setError(null);
-      const res = await fetch(EVENTS_URL, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' },
-      });
-      const html = await res.text();
+      // const res = await fetch(EVENTS_URL, {
+      //   headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' },
+      // });
+      // const html = await res.text();
+
+      const response = await fetch(`http://${HOSTPORT}/trmEvent`);
+      const data = await response.json();
+      const html = data.html;
 
       setNoUpcoming(html.includes('There are no upcoming events'));
 

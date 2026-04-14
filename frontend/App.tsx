@@ -48,6 +48,7 @@ function MainTabs() {
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Explore') iconName = focused ? 'search' : 'search-outline';
           else if (route.name === 'Events') iconName = focused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Volunteer') iconName = focused ? 'hand-left' : 'hand-left-outline';
           else if (route.name === 'Saved') iconName = focused ? 'bookmark' : 'bookmark-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
           return <Icon name={iconName} size={22} color={color} />;

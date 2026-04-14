@@ -9,6 +9,24 @@ const VolunteerHubApiKey = process.env.VOLUNTEERHUB_API_KEY;
 const app = express();
 app.use(cors());
 
+app.get("/trmEvent", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://www.trm.org/events/",
+      {
+          headers: { 
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' }
+      });
+
+    const html = response.data;
+    res.json({ html });
+  }
+  catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Failed to fetch events" });
+  }
+});
+
 // req --> what the client sent
 // res --> what im sending back to the client
 // here, we are telling express what to do when it recieves a GET request for "/events"
