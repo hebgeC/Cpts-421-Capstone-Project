@@ -23,10 +23,10 @@ const SETTINGS = [
 ];
 
 const INFO = [
-  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B' },
-  { icon: 'people-outline', label: 'About TRM', color: '#8B6B5A' },
-  { icon: 'help-circle-outline', label: 'Help & Support', color: '#E67E22' },
-  { icon: 'call-outline', label: 'Emergency Contacts', color: '#27AE60' },
+  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B', url: 'https://www.trm.org/inkind/' },
+  { icon: 'people-outline', label: 'About TRM', color: '#8B6B5A', url: 'https://www.trm.org/about/' },
+  { icon: 'help-circle-outline', label: 'Help & Support', color: '#E67E22', url: 'https://www.trm.org/contact/' },
+  // { icon: 'call-outline', label: 'Emergency Contacts', color: '#27AE60', url: '' },
 ];
 
 const STATS = [
@@ -101,6 +101,7 @@ export default function ProfileScreen() {
               key={i}
               style={[styles.menuRow, i < INFO.length - 1 && styles.menuRowBorder]}
               activeOpacity={0.7}
+              onPress={() => navigation.navigate('WebView', { url: item.url, title: item.label })}
             >
               <View style={[styles.menuIcon, { backgroundColor: item.color + '18' }]}>
                 <Icon name={item.icon} size={18} color={item.color} />

@@ -12,6 +12,7 @@ import EventsScreen from './src/screens/EventsScreen';
 import VolunteerScreen from './src/screens/VolunteerScreen';
 import ArticleScreen from './src/screens/ArticleScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import WebViewScreen from './src/screens/WebViewScreen';
 import BookmarksScreen from './src/screens/BookmarksScreen';
 import { AuthContext } from './src/context/AuthContext';
 
@@ -86,6 +87,11 @@ export default function App() {
               <Stack.Screen
                 name="Article"
                 component={ArticleScreen}
+                options={{ presentation: 'card', animation: 'slide_from_right' }}
+              />
+              <Stack.Screen
+                name="WebView"
+                component={WebViewScreen}
                 options={{ presentation: 'card', animation: 'slide_from_right' }}
               />
             </>

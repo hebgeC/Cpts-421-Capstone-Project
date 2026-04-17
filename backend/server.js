@@ -12,7 +12,7 @@ app.use(cors());
 app.get("/trmEvent", async (req, res) => {
   try {
     const response = await axios.get(
-      "https://www.trm.org/events/",
+      "https://www.trm.org/events/list/",
       {
           headers: { 
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' }

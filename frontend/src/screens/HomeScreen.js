@@ -5,7 +5,7 @@
 //  Created by ethan frazier on 4/5/26.
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
 } from 'react-native';
@@ -13,8 +13,15 @@ import { Ionicons as Icon } from '@expo/vector-icons';
 import { ARTICLES, CATEGORIES } from '../data/content';
 
 export default function HomeScreen({ navigation }) {
-  const featured = ARTICLES[0];
-  const recent = ARTICLES.slice(1, 5);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const allArticles = ARTICLES;
+  const filtered = selectedCategory === 'All'
+    ? allArticles
+    : allArticles.filter(a => a.category === selectedCategory);
+
+  const featured = filtered[0];
+  const recent = filtered.slice(1, 5);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -52,9 +59,10 @@ export default function HomeScreen({ navigation }) {
           {CATEGORIES.map((cat, i) => (
             <TouchableOpacity
               key={i}
-              style={[styles.categoryPill, i === 0 && styles.categoryPillActive]}
+              style={[styles.categoryPill, cat === selectedCategory && styles.categoryPillActive]}
+              onPress={() => setSelectedCategory(cat)}
             >
-              <Text style={[styles.categoryText, i === 0 && styles.categoryTextActive]}>
+              <Text style={[styles.categoryText, cat === selectedCategory && styles.categoryTextActive]}>
                 {cat}
               </Text>
             </TouchableOpacity>
@@ -67,27 +75,33 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.featuredCard}
-          activeOpacity={0.92}
-          onPress={() => navigation.navigate('Article', { article: featured })}
-        >
-          <View style={styles.featuredImageBg}>
-            <Text style={styles.featuredEmoji}>{featured.emoji}</Text>
-          </View>
-          <View style={styles.featuredOverlay}>
-            <View style={styles.featuredTag}>
-              <Text style={styles.featuredTagText}>{featured.category}</Text>
+        {featured ? (
+          <TouchableOpacity
+            style={styles.featuredCard}
+            activeOpacity={0.92}
+            onPress={() => navigation.navigate('Article', { article: featured })}
+          >
+            <View style={styles.featuredImageBg}>
+              <Text style={styles.featuredEmoji}>{featured.emoji}</Text>
             </View>
-            <Text style={styles.featuredTitle}>{featured.title}</Text>
-            <View style={styles.featuredMeta}>
-              <Icon name="time-outline" size={13} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.featuredMetaText}>
-                {featured.readTime} min read Â· {featured.date}
-              </Text>
+            <View style={styles.featuredOverlay}>
+              <View style={styles.featuredTag}>
+                <Text style={styles.featuredTagText}>{featured.category}</Text>
+              </View>
+              <Text style={styles.featuredTitle}>{featured.title}</Text>
+              <View style={styles.featuredMeta}>
+                <Icon name="time-outline" size={13} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.featuredMetaText}>
+                  {featured.readTime} min read · {featured.date}
+                </Text>
+              </View>
             </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No articles in this category.</Text>
           </View>
-        </TouchableOpacity>
+        )}
 
         {/* Recent */}
         <View style={styles.sectionHeader}>
@@ -111,7 +125,7 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.articleMeta}>
                 <Icon name="time-outline" size={12} color="#AAAAAA" />
                 <Text style={styles.articleMetaText}>
-                  {article.readTime} min Â· {article.date}
+                  {article.readTime} min · {article.date}
                 </Text>
               </View>
             </View>
@@ -202,4 +216,6 @@ const styles = StyleSheet.create({
   articleTitle: { fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 6 },
   articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   articleMetaText: { fontSize: 12, color: '#AAAAAA' },
+  emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
+  emptyStateText: { fontSize: 14, color: '#AAAAAA', fontStyle: 'italic' },
 });

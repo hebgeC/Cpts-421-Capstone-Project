@@ -47,7 +47,7 @@ function parseEvents(html) {
   const events = [];
 
   // The TRM site (The Events Calendar plugin) wraps each event in <article ...>
-  const blocks = html.split(/<article\s/);
+  const blocks = html.split(/<article[\s>]/);
   // skip index 0 — it's everything before the first article
   for (let i = 1; i < blocks.length; i++) {
     const block = blocks[i];
