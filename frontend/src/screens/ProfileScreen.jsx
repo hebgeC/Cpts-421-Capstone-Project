@@ -5,16 +5,19 @@
 //  Created by ethan frazier on 4/5/26.
 //
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
+import LogoutConfirmModal from '../components/LogoutConfirmModal';
 
 const SETTINGS = [
   { icon: 'notifications-outline', label: 'Notifications', color: '#C0392B' },
-  { icon: 'calendar-outline', label: 'Volunteer Schedule', color: '#E67E22' },
+  { icon: 'calendar-outline', label: 'Volunteer Schedule', color: '#E67E22' }, 
   { icon: 'location-outline', label: 'Nearby Shelters', color: '#27AE60' },
   { icon: 'download-outline', label: 'Offline Access', color: '#2980B9' },
 ];
@@ -34,16 +37,18 @@ const STATS = [
 
 export default function ProfileScreen() {
   const { setIsLoggedIn } = useContext(AuthContext);
+  const navigation = useNavigation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: () => setIsLoggedIn(false) },
-    ]);
-  };
+  const handleLogout = () => setShowLogoutModal(true);
 
   return (
     <SafeAreaView style={styles.safe}>
+      <LogoutConfirmModal
+        visible={showLogoutModal}
+        onConfirm={() => { setShowLogoutModal(false); setIsLoggedIn(false); }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My Profile</Text>
