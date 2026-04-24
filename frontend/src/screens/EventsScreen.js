@@ -60,7 +60,7 @@ function parseEvents(html) {
     // ── Title ── inside an <h2> or <h3> tag that contains the URL
     // Pattern: <h2 ...><a href="...EVENT_URL...">TITLE</a></h2>
     const titleMatch = block.match(
-      /<h[23][^>]*>[\s\S]*?<a[^>]+href="[^"]*\/events\/[^"]*"[^>]*>([\s\S]*?)<\/a>/i
+      /<h[2-6][^>]*>[\s\S]*?<a[^>]+href="[^"]*\/events\/[^"]*"[^>]*>([\s\S]*?)<\/a>/i
     );
     if (!titleMatch) continue;
     const title = clean(titleMatch[1]);
