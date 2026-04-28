@@ -79,9 +79,9 @@ export default function CalendarView() {
 
         const MAX_PAGES = 10;
         const HARD_PAGES_CAP = 20;
-        const requests = Array.from({ length: MAX_PAGES }, (_, page) =>
+        const requests = Array.from({ length: MAX_PAGES }, (_, i) =>
             axios
-                .get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)
+                .get(`http://${HOSTPORT}/volunteerShiftEvent/${i + 1}/${earliestTime}/${latestTime}`)
                 .then(({ data }) => (Array.isArray(data) ? data : []))
                 .catch(() => [])
         );

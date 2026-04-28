@@ -5,6 +5,7 @@ const getVolunteerHubApiKey = () => {
   if (!key) {
     throw new Error("Missing VOLUNTEERHUB_API_KEY");
   }
+  console.log("==============", key);
   return key;
 };
 

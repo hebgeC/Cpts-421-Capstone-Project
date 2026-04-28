@@ -1,12 +1,24 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons as Icon } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 
 export default function WebViewScreen() {
   const navigation = useNavigation();
   const { params } = useRoute();
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && params?.url) {
+      WebBrowser.openBrowserAsync(params.url);
+      navigation.goBack();
+    }
+  }, []);
+
+  if (Platform.OS === 'web') {
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.safe}>

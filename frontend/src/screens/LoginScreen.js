@@ -6,8 +6,10 @@ import {
 import { WebView } from 'react-native-webview';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
+import * as WebBrowser from 'expo-web-browser';
 
 const LOGIN_URL = 'https://rescue-mission.volunteerhub.com/account/signin?ReturnUrl=%2f';
+const LOGIN_SUCCESS_URL = 'https://rescue-mission.volunteerhub.com/vv2';
 
 // Injected after page load to read the logged-in user's display name from the VH nav bar
 const EXTRACT_USER_JS = `
@@ -30,6 +32,14 @@ export default function LoginScreen() {
   const [webViewVisible, setWebViewVisible] = useState(false);
   const [webViewLoading, setWebViewLoading] = useState(true);
   const webViewRef = useRef(null);
+
+  const handleWebLogin = async () => {
+    const result = await WebBrowser.openAuthSessionAsync(LOGIN_URL, LOGIN_SUCCESS_URL);
+    if (result.type === 'success') {
+      setUser({ displayName: 'Volunteer', source: 'volunteerhub' });
+      setIsLoggedIn(true);
+    }
+  };
 
   const handleNavigationChange = (navState) => {
     if (isLoginSuccess(navState.url)) {
@@ -126,7 +136,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.loginBtn}
-          onPress={() => { setWebViewLoading(true); setWebViewVisible(true); }}
+          onPress={Platform.OS === 'web' ? handleWebLogin : () => { setWebViewLoading(true); setWebViewVisible(true); }}
           activeOpacity={0.9}
         >
           <Icon name="log-in-outline" size={18} color="#FFFFFF" />
