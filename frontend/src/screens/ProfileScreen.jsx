@@ -23,7 +23,8 @@ const SETTINGS = [
 ];
 
 const INFO = [
-  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B', url: 'https://www.trm.org/inkind/' },
+  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B', url: 'https://support.trm.org' },
+  { icon: 'gift-outline', label: 'In-Kind Giving', color: '#27AE60', url: 'https://www.trm.org/inkind/' },
   { icon: 'people-outline', label: 'About TRM', color: '#8B6B5A', url: 'https://www.trm.org/about/' },
   { icon: 'help-circle-outline', label: 'Help & Support', color: '#E67E22', url: 'https://www.trm.org/contact/' },
   // { icon: 'call-outline', label: 'Emergency Contacts', color: '#27AE60', url: '' },
@@ -36,11 +37,16 @@ const STATS = [
 ];
 
 export default function ProfileScreen() {
-  const { setIsLoggedIn } = useContext(AuthContext);
+  const { setIsLoggedIn, user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => setShowLogoutModal(true);
+
+  const displayName = user?.displayName || 'Volunteer';
+  const statusLine = user?.source === 'volunteerhub'
+    ? 'Signed in with VolunteerHub'
+    : 'Guest session';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -58,8 +64,8 @@ export default function ProfileScreen() {
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarEmoji}>ðŸ™</Text>
           </View>
-          <Text style={styles.userName}>Alex Volunteer</Text>
-          <Text style={styles.userEmail}>alex@tacomarescue.org</Text>
+          <Text style={styles.userName}>{displayName}</Text>
+          <Text style={styles.userEmail}>{statusLine}</Text>
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Icon name="ribbon-outline" size={13} color="#C0392B" />

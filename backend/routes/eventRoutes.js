@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  fetchTrmEvent,
+  fetchTrmEvents,
   fetchVolunteerShiftEvents,
   fetchVolunteerShiftEventById,
   fetchVolunteerShiftEventsByTimeRange,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.get("/trmEvent", fetchTrmEvent);
+router.get("/events", fetchTrmEvents);
 router.get("/volunteerShiftEvent", fetchVolunteerShiftEvents);
 router.get("/volunteerShiftEvent/:eventID", fetchVolunteerShiftEventById);
 router.get("/volunteerShiftEvent/:earliestTime/:latestTime", fetchVolunteerShiftEventsByTimeRange);

@@ -1,4 +1,7 @@
 import axios from "axios";
+import { decodeEntities } from "../utils/textUtils.js";
+
+const TRIBE_EVENTS_URL = "https://www.trm.org/wp-json/tribe/events/v1/events";
 
 const getVolunteerHubApiKey = () => {
   const key = process.env.VOLUNTEERHUB_API_KEY;
@@ -8,15 +11,39 @@ const getVolunteerHubApiKey = () => {
   return key;
 };
 
-const fetchTrmEvent = async (req, res) => {
+function mapTribeEvent(e) {
+  const venue = e.venue?.venue || "";
+  const address = [e.venue?.address, e.venue?.city, e.venue?.state, e.venue?.zip]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    id: e.id,
+    title: decodeEntities(e.title),
+    description: decodeEntities(e.description),
+    url: e.url,
+    image: e.image?.url || null,
+    startDate: e.start_date,
+    endDate: e.end_date,
+    allDay: Boolean(e.all_day),
+    venue,
+    address,
+    cost: e.cost || null,
+  };
+}
+
+const fetchTrmEvents = async (req, res) => {
   try {
-    const response = await axios.get("https://www.trm.org/events/list/", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
-      },
+    const { page = 1, per_page = 20, start_date, end_date } = req.query;
+    const response = await axios.get(TRIBE_EVENTS_URL, {
+      params: { page, per_page, start_date, end_date },
     });
 
-    res.json({ html: response.data });
+    res.json({
+      events: (response.data.events || []).map(mapTribeEvent),
+      total: response.data.total,
+      totalPages: response.data.total_pages,
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to fetch events" });
@@ -103,7 +130,7 @@ const fetchVolunteerShiftEventsByPageTimeRange = async (req, res) => {
 };
 
 export {
-  fetchTrmEvent,
+  fetchTrmEvents,
   fetchVolunteerShiftEvents,
   fetchVolunteerShiftEventById,
   fetchVolunteerShiftEventsByTimeRange,

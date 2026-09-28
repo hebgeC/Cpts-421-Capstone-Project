@@ -1,23 +1,86 @@
-//
-//  ExploreScreen.js
-//  
-//
-//  Created by ethan frazier on 4/5/26.
-//
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
+  ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import { ARTICLES, CATEGORY_DATA } from '../data/content';
+import { API_BASE_URL } from '../utils/api';
+
+const BUILT_IN_SECTIONS = [
+  { key: 'articles', name: 'Articles', icon: '📰', bg: '#FDECEA', color: '#C0392B', description: 'Client stories' },
+  { key: 'updates', name: 'Updates', icon: '📢', bg: '#FEF9E7', color: '#E67E22', description: 'News from TRM' },
+];
+
+function formatDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 export default function ExploreScreen({ navigation }) {
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeSection, setActiveSection] = useState(null);
+  const [articles, setArticles] = useState([]);
+  const [updates, setUpdates] = useState([]);
+  const [siteCategories, setSiteCategories] = useState([]);
+  const [siteItems, setSiteItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = activeCategory
-    ? ARTICLES.filter(a => a.category === activeCategory)
-    : ARTICLES;
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+      const [articlesRes, updatesRes, siteMapRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/wpArticles`),
+        fetch(`${API_BASE_URL}/wpUpdates`),
+        fetch(`${API_BASE_URL}/siteMap`),
+      ]);
+      const articlesData = await articlesRes.json();
+      const updatesData = await updatesRes.json();
+      const siteMapData = await siteMapRes.json();
+      setArticles((articlesData.articles || []).map((a) => ({ ...a, kind: 'articles' })));
+      setUpdates((updatesData || []).filter((u) => u.title).map((u) => ({ ...u, kind: 'updates' })));
+      setSiteCategories(siteMapData.categories || []);
+      setSiteItems(siteMapData.items || []);
+    } catch (e) {
+      setError('Could not load content. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const sections = [
+    ...BUILT_IN_SECTIONS,
+    ...siteCategories.map((c) => ({
+      key: c.key, name: c.title, icon: c.icon, bg: c.bg, color: c.color, description: c.description,
+    })),
+  ];
+
+  const handleSectionPress = (key) => {
+    setActiveSection((current) => (current === key ? null : key));
+  };
+
+  const handleSiteItemPress = (item) => {
+    if (item.type === 'external') {
+      navigation.navigate('WebView', { url: item.url, title: item.title });
+    } else {
+      navigation.navigate('PageDetail', { slug: item.slug, title: item.title });
+    }
+  };
+
+  const isSiteCategory = activeSection && siteCategories.some((c) => c.key === activeSection);
+  const activeCategoryTitle = isSiteCategory
+    ? siteCategories.find((c) => c.key === activeSection)?.title
+    : null;
+
+  const listed = activeSection === 'updates' ? updates
+    : activeSection === 'articles' ? articles
+    : isSiteCategory ? []
+    : [...updates, ...articles];
+
+  const siteItemsForCategory = isSiteCategory
+    ? siteItems.filter((i) => i.category === activeSection)
+    : [];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -27,65 +90,113 @@ export default function ExploreScreen({ navigation }) {
           <Text style={styles.headerSub}>Find ways to serve your community</Text>
         </View>
 
-        {!activeCategory && (
-          <View style={styles.categoryGrid}>
-            {CATEGORY_DATA.map((cat, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.categoryCard, { backgroundColor: cat.bg }]}
-                onPress={() => setActiveCategory(cat.name)}
-                activeOpacity={0.88}
-              >
-                <Text style={styles.catEmoji}>{cat.icon}</Text>
-                <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
-                <Text style={[styles.catCount, { color: cat.color + 'AA' }]}>
-                  {cat.count} resources
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {activeCategory && (
-          <View style={styles.filterHeader}>
-            <TouchableOpacity style={styles.backPill} onPress={() => setActiveCategory(null)}>
-              <Icon name="arrow-back" size={16} color="#C0392B" />
-              <Text style={styles.backPillText}>All Categories</Text>
+        <View style={styles.categoryGrid}>
+          {sections.map((s) => (
+            <TouchableOpacity
+              key={s.key}
+              style={[
+                styles.categoryCard,
+                { backgroundColor: s.bg },
+                activeSection === s.key && styles.categoryCardActive,
+              ]}
+              onPress={() => handleSectionPress(s.key)}
+              activeOpacity={0.88}
+            >
+              <Text style={styles.catEmoji}>{s.icon}</Text>
+              <Text style={[styles.catName, { color: s.color }]}>{s.name}</Text>
+              <Text style={[styles.catCount, { color: s.color + 'AA' }]}>{s.description}</Text>
             </TouchableOpacity>
-            <Text style={styles.filterTitle}>{activeCategory}</Text>
-          </View>
-        )}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {activeCategory ? `${activeCategory} Resources` : 'All Resources'}
-          </Text>
+          ))}
         </View>
 
-        {filtered.map((article, i) => (
-          <TouchableOpacity
-            key={i}
-            style={styles.listCard}
-            activeOpacity={0.88}
-            onPress={() => navigation.navigate('Article', { article })}
-          >
-            <View style={styles.listNumber}>
-              <Text style={styles.listNumberText}>{i + 1}</Text>
+        {loading && (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#C0392B" />
+          </View>
+        )}
+
+        {!loading && error && (
+          <View style={styles.errorBox}>
+            <Icon name="wifi-outline" size={24} color="#C0392B" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={load}>
+              <Text style={styles.retryBtnText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading && !error && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {activeSection === 'updates' ? 'Updates'
+                  : activeSection === 'articles' ? 'Articles'
+                  : isSiteCategory ? activeCategoryTitle
+                  : 'All Resources'}
+              </Text>
             </View>
-            <View style={styles.listEmoji}>
-              <Text style={{ fontSize: 26 }}>{article.emoji}</Text>
-            </View>
-            <View style={styles.listInfo}>
-              <Text style={styles.listCategory}>{article.category}</Text>
-              <Text style={styles.listTitle} numberOfLines={2}>{article.title}</Text>
-              <View style={styles.listMeta}>
-                <Icon name="time-outline" size={12} color="#AAAAAA" />
-                <Text style={styles.listMetaText}>{article.readTime} min read</Text>
+
+            {isSiteCategory && siteItemsForCategory.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>Nothing here yet.</Text>
               </View>
-            </View>
-            <Icon name="chevron-forward" size={16} color="#CCCCCC" />
-          </TouchableOpacity>
-        ))}
+            )}
+
+            {isSiteCategory && siteItemsForCategory.map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={styles.listCard}
+                activeOpacity={0.88}
+                onPress={() => handleSiteItemPress(item)}
+              >
+                <View style={styles.listEmoji}>
+                  <Icon name={item.icon} size={22} color="#C0392B" />
+                </View>
+                <View style={styles.listInfo}>
+                  <Text style={styles.listCategory}>{item.type === 'external' ? 'On trm.org' : activeCategoryTitle}</Text>
+                  <Text style={styles.listTitle} numberOfLines={2}>{item.title}</Text>
+                </View>
+                <Icon name={item.type === 'external' ? 'open-outline' : 'chevron-forward'} size={16} color="#CCCCCC" />
+              </TouchableOpacity>
+            ))}
+
+            {!isSiteCategory && listed.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>Nothing here yet.</Text>
+              </View>
+            )}
+
+            {!isSiteCategory && listed.map((item) => (
+              <TouchableOpacity
+                key={`${item.kind}-${item.id}`}
+                style={styles.listCard}
+                activeOpacity={0.88}
+                onPress={() => navigation.navigate('Article', { article: item })}
+              >
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.listImage} resizeMode="cover" />
+                ) : (
+                  <View style={styles.listEmoji}>
+                    <Icon
+                      name={item.kind === 'updates' ? 'megaphone-outline' : 'document-text-outline'}
+                      size={22}
+                      color="#C0392B"
+                    />
+                  </View>
+                )}
+                <View style={styles.listInfo}>
+                  <Text style={styles.listCategory}>{item.kind === 'updates' ? 'Update' : 'Client Story'}</Text>
+                  <Text style={styles.listTitle} numberOfLines={2}>{item.title || 'Untitled'}</Text>
+                  <View style={styles.listMeta}>
+                    <Icon name="time-outline" size={12} color="#AAAAAA" />
+                    <Text style={styles.listMetaText}>{formatDate(item.date)}</Text>
+                  </View>
+                </View>
+                <Icon name="chevron-forward" size={16} color="#CCCCCC" />
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -102,28 +213,28 @@ const styles = StyleSheet.create({
   categoryCard: {
     width: '47%', borderRadius: 18, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    borderWidth: 2, borderColor: 'transparent',
   },
+  categoryCardActive: { borderColor: '#2C1810' },
   catEmoji: { fontSize: 32, marginBottom: 10 },
   catName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
   catCount: { fontSize: 12, fontWeight: '500' },
-  filterHeader: { paddingHorizontal: 20, marginBottom: 8 },
-  backPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    alignSelf: 'flex-start', backgroundColor: '#FDECEA', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6, marginBottom: 12,
-  },
-  backPillText: { color: '#C0392B', fontWeight: '600', fontSize: 13 },
-  filterTitle: { fontSize: 22, fontWeight: '800', color: '#2C1810' },
+  loadingBox: { alignItems: 'center', paddingVertical: 50, gap: 14 },
+  errorBox: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 30, gap: 12 },
+  errorText: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 },
+  retryBtn: { backgroundColor: '#C0392B', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 },
+  retryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   sectionHeader: { paddingHorizontal: 20, marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#2C1810' },
+  emptyState: { alignItems: 'center', paddingVertical: 30, paddingHorizontal: 20 },
+  emptyStateText: { fontSize: 14, color: '#AAAAAA', fontStyle: 'italic' },
   listCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFFFFF', marginHorizontal: 20, marginBottom: 10,
     borderRadius: 16, padding: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  listNumber: { width: 24, alignItems: 'center', marginRight: 8 },
-  listNumberText: { fontSize: 12, color: '#CCCCCC', fontWeight: '700' },
+  listImage: { width: 52, height: 52, borderRadius: 14, marginRight: 12, backgroundColor: '#F0F0F0' },
   listEmoji: {
     width: 52, height: 52, borderRadius: 14, backgroundColor: '#FDF6F0',
     alignItems: 'center', justifyContent: 'center', marginRight: 12,

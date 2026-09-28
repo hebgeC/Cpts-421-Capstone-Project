@@ -2,147 +2,70 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   SafeAreaView, Linking, TextInput, Image, ActivityIndicator,
-  RefreshControl, Platform
+  RefreshControl,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
+import { API_BASE_URL } from '../utils/api';
 
-function getHostPort() {
-    const os = Platform.OS;
-    console.log(os);
-    if (os === "android")
-    {
-        return "10.0.2.2:3000";
-    }
-
-    return "localhost:3000";
-}
-
-const HOSTPORT = getHostPort();
-
-// Month name -> 3-letter abbreviation lookup
 const MONTH_MAP = {
-  january: 'Jan', february: 'Feb', march: 'Mar', april: 'Apr',
-  may: 'May', june: 'Jun', july: 'Jul', august: 'Aug',
-  september: 'Sep', october: 'Oct', november: 'Nov', december: 'Dec',
+  '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
+  '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Aug',
+  '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec',
 };
 
-// Strip all HTML tags and decode common entities
-function clean(str) {
-  if (!str) return '';
-  return str
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8216;/g, "'")
-    .replace(/&#8211;/g, '–')
-    .replace(/&#8212;/g, '—')
-    .replace(/\[&hellip;\]/g, '...')
-    .replace(/\[…\]/g, '...')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function parseEvents(html) {
-  const events = [];
+// "2026-11-27 15:00:00" -> "3:00 PM"
+function formatTime(datetime) {
+  const timePart = (datetime || '').split(' ')[1];
+  if (!timePart) return '';
+  const [hStr, mStr] = timePart.split(':');
+  let h = parseInt(hStr, 10);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${mStr} ${ampm}`;
+}
 
-  // The TRM site (The Events Calendar plugin) wraps each event in <article ...>
-  const blocks = html.split(/<article[\s>]/);
-  // skip index 0 — it's everything before the first article
-  for (let i = 1; i < blocks.length; i++) {
-    const block = blocks[i];
+// e.g. "November 27, 2026 @ 3:00 PM - 6:00 PM"
+function formatDatetimeRange(startDate, endDate) {
+  const [datePart] = (startDate || '').split(' ');
+  const [year, mm, dd] = (datePart || '').split('-');
+  if (!mm) return '';
+  const monthName = MONTH_NAMES[parseInt(mm, 10) - 1] || '';
+  const startTime = formatTime(startDate);
+  const endTime = formatTime(endDate);
+  const dayLabel = `${monthName} ${parseInt(dd, 10)}, ${year}`;
+  if (startTime && endTime) return `${dayLabel} @ ${startTime} - ${endTime}`;
+  if (startTime) return `${dayLabel} @ ${startTime}`;
+  return dayLabel;
+}
 
-    // ── URL ── must be a /events/ permalink
-    const urlMatch = block.match(/href="(https:\/\/www\.trm\.org\/events\/[^"#?]+)"/);
-    if (!urlMatch) continue;
-    const url = urlMatch[1];
+function mapEvent(e) {
+  const [datePart] = (e.startDate || '').split(' ');
+  const [, mm, dd] = (datePart || '').split('-');
+  const month = MONTH_MAP[mm] || '';
+  const day = dd ? String(parseInt(dd, 10)) : '';
 
-    // ── Title ── inside an <h2> or <h3> tag that contains the URL
-    // Pattern: <h2 ...><a href="...EVENT_URL...">TITLE</a></h2>
-    const titleMatch = block.match(
-      /<h[23][^>]*>[\s\S]*?<a[^>]+href="[^"]*\/events\/[^"]*"[^>]*>([\s\S]*?)<\/a>/i
-    );
-    if (!titleMatch) continue;
-    const title = clean(titleMatch[1]);
-
-    // ── Image ── first wp-content/uploads image in the block
-    const imgMatch = block.match(
-      /src="(https:\/\/www\.trm\.org\/wp-content\/uploads\/[^"]+\.(png|jpg|jpeg|webp))"/i
-    );
-    const image = imgMatch ? imgMatch[1] : null;
-
-    // ── Datetime string ──
-    // The site outputs: "November 27, 2025 @ 3:00 PM - 6:00 PM"
-    // or: "September 28, 2025 @ 3:30 PM - 4:30 PM"
-    const datetimeMatch = block.match(
-      /([A-Z][a-z]+ \d{1,2}, \d{4} @ \d{1,2}:\d{2} [AP]M\s*[-–]\s*\d{1,2}:\d{2} [AP]M)/
-    );
-    const datetime = datetimeMatch ? datetimeMatch[1].trim() : '';
-
-    // ── Month and Day ──
-    // Derive from the datetime string — most reliable source
-    let month = '';
-    let day = '';
-    if (datetimeMatch) {
-      // e.g. "November 27, 2025 @ ..."
-      const parts = datetimeMatch[1].split(' ');
-      const fullMonth = parts[0].toLowerCase();
-      month = MONTH_MAP[fullMonth] || parts[0].substring(0, 3);
-      day = parseInt(parts[1].replace(',', '').trim(), 10).toString();
-    } else {
-      // Fallback: look for the plain-text date block the site emits:
-      // "Nov \n\n27 \n\n2025" between the article tags
-      const monthTextMatch = block.match(
-        /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i
-      );
-      const dayTextMatch = block.match(/\b(\d{1,2})\b[\s\S]{0,30}?\b(20\d{2})\b/);
-      if (monthTextMatch) {
-        month = MONTH_MAP[monthTextMatch[1].toLowerCase()] || monthTextMatch[1].substring(0, 3);
-      }
-      if (dayTextMatch) {
-        day = dayTextMatch[1];
-      }
-    }
-
-    // ── Venue name ──
-    // The Events Calendar wraps it in class="tribe-venue"
-    const venueMatch = block.match(
-      /class="tribe-venue"[^>]*>([\s\S]*?)<\/(?:address|div|span|p)>/i
-    ) || block.match(/tribe-venue-name[^>]*>([\s\S]*?)<\/(?:span|div|p|address)>/i);
-    const venue = venueMatch ? clean(venueMatch[1]) : '';
-
-    // ── Address ──
-    const addrMatch = block.match(
-      /tribe-address[^>]*>([\s\S]*?)<\/address>/i
-    ) || block.match(/tribe-full-address[^>]*>([\s\S]*?)<\//i);
-    const address = addrMatch ? clean(addrMatch[1]) : '';
-
-    // ── Description excerpt ──
-    const descMatch = block.match(
-      /tribe-event-description[^>]*>([\s\S]*?)<\/(?:p|div)>/i
-    );
-    const description = descMatch ? clean(descMatch[1]) : '';
-
-    // ── Price ──
-    // The site shows "$12.23" inside class="tribe-event-cost"
-    const priceMatch = block.match(/tribe-event-cost[^>]*>([\s\S]*?)<\//i);
-    let price = null;
-    if (priceMatch) {
-      const priceText = clean(priceMatch[1]);
-      if (priceText && priceText !== 'Free' && priceText.length > 0) {
-        price = priceText.startsWith('$') ? priceText : `$${priceText}`;
-      }
-    }
-    // Fallback: look for a standalone dollar amount in the block
-    if (!price) {
-      const dollarMatch = block.match(/\$(\d+\.\d{2})/);
-      if (dollarMatch) price = `$${dollarMatch[1]}`;
-    }
-
-    events.push({ id: url, month, day, datetime, title, url, image, venue, address, description, price });
-  }
-
-  return events;
+  return {
+    id: e.id,
+    month,
+    day,
+    datetime: formatDatetimeRange(e.startDate, e.endDate),
+    title: e.title,
+    url: e.url,
+    image: e.image,
+    venue: e.venue,
+    address: e.address,
+    description: e.description,
+    price: e.cost && e.cost !== 'Free' ? e.cost : null,
+  };
 }
 
 export default function EventsScreen() {
@@ -157,24 +80,20 @@ export default function EventsScreen() {
   const fetchEvents = useCallback(async () => {
     try {
       setError(null);
-      // const res = await fetch(EVENTS_URL, {
-      //   headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)' },
-      // });
-      // const html = await res.text();
 
-      const response = await fetch(`http://${HOSTPORT}/trmEvent`);
-      const data = await response.json();
-      const html = data.html;
+      const [upcomingRes, pastRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/events?per_page=50`),
+        fetch(`${API_BASE_URL}/events?per_page=50&start_date=2000-01-01&end_date=${todayISO()}`),
+      ]);
+      const upcomingJson = await upcomingRes.json();
+      const pastJson = await pastRes.json();
 
-      setNoUpcoming(html.includes('There are no upcoming events'));
+      const upcoming = (upcomingJson.events || []).map(mapEvent);
+      const past = (pastJson.events || []).map(mapEvent).reverse();
 
-      // Split the HTML at the "Latest Past Events" heading
-      const splitIndex = html.search(/Latest Past Events/i);
-      const upcomingHtml = splitIndex > 0 ? html.substring(0, splitIndex) : html;
-      const pastHtml = splitIndex > 0 ? html.substring(splitIndex) : '';
-
-      setUpcomingEvents(parseEvents(upcomingHtml));
-      setPastEvents(parseEvents(pastHtml));
+      setNoUpcoming(upcoming.length === 0);
+      setUpcomingEvents(upcoming);
+      setPastEvents(past);
     } catch (e) {
       setError('Could not load events. Please check your connection.');
     } finally {

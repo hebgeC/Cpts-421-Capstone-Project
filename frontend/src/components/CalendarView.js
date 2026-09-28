@@ -1,5 +1,4 @@
 import {
-    Platform,
     Text,
     View,
     TouchableOpacity,
@@ -10,19 +9,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import MonthYearPicker from "./MonthYearPicker";
 import DetailModal from "./DetailModal";
-
-function getHostPort() {
-    const os = Platform.OS;
-    console.log(os);
-    if (os === "android")
-    {
-        return "10.0.2.2:3000";
-    }
-
-    return "localhost:3000";
-}
-
-const HOSTPORT = getHostPort();
+import { API_BASE_URL } from "../utils/api";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -57,7 +44,7 @@ export default function CalendarView() {
     const fetchEvents = async () => {
         try {
             const response = await axios.get(
-                `http://${HOSTPORT}/volunteerShiftEvent`
+                `${API_BASE_URL}/volunteerShiftEvent`
             );
             const data = response.data;
             setEvents(Array.isArray(data) ? data : data?.events ?? []);
@@ -81,7 +68,7 @@ export default function CalendarView() {
         const HARD_PAGES_CAP = 20;
         const requests = Array.from({ length: MAX_PAGES }, (_, page) =>
             axios
-                .get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)
+                .get(`${API_BASE_URL}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)
                 .then(({ data }) => (Array.isArray(data) ? data : []))
                 .catch(() => [])
         );
@@ -97,7 +84,7 @@ export default function CalendarView() {
             // need to keep fetching events
             while (page < HARD_PAGES_CAP)
             {
-                let data = (await axios.get(`http://${HOSTPORT}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)).data;
+                let data = (await axios.get(`${API_BASE_URL}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)).data;
                 results.push(data);
 
                 if (data.length < 50)
