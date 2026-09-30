@@ -48,21 +48,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.greeting}>How can you help today?</Text>
             <Text style={styles.headerTitle}>TRM</Text>
           </View>
-          <TouchableOpacity style={styles.notifBtn}>
-            <Icon name="notifications-outline" size={22} color="#2C1810" />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
         </View>
-
-        <View style={styles.urgentBanner}>
-          <Icon name="alert-circle" size={16} color="#C0392B" />
-          <Text style={styles.urgentText}>Urgent: Winter shelter drive needs volunteers this weekend</Text>
-        </View>
-
-        <TouchableOpacity style={styles.searchBar} activeOpacity={0.8}>
-          <Icon name="search-outline" size={18} color="#AAAAAA" />
-          <Text style={styles.searchText}>Search drives, events, resources...</Text>
-        </TouchableOpacity>
 
         {loading && (
           <View style={styles.loadingBox}>
@@ -201,28 +187,6 @@ const styles = StyleSheet.create({
   },
   greeting: { fontSize: 13, color: '#8B6B5A', fontWeight: '500' },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#2C1810', letterSpacing: -0.5 },
-  notifBtn: {
-    position: 'relative', padding: 8, backgroundColor: '#FFFFFF', borderRadius: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
-  },
-  notifDot: {
-    position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4,
-    backgroundColor: '#C0392B', borderWidth: 1.5, borderColor: '#FFFFFF',
-  },
-  urgentBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FDECEA', marginHorizontal: 20, marginBottom: 10,
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
-    borderLeftWidth: 3, borderLeftColor: '#C0392B',
-  },
-  urgentText: { flex: 1, fontSize: 12, color: '#7B241C', fontWeight: '600', lineHeight: 17 },
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFFFFF', marginHorizontal: 20, marginVertical: 8,
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 13,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-  },
-  searchText: { color: '#BBBBBB', fontSize: 14 },
   loadingBox: { alignItems: 'center', paddingVertical: 50, gap: 14 },
   errorBox: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 30, gap: 12 },
   errorText: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 },

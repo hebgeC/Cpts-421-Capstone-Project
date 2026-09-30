@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
   ActivityIndicator, Linking, useWindowDimensions,
@@ -7,6 +7,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
+import { SavedResourcesContext } from '../context/SavedResourcesContext';
 
 const SHELTER_PHONE = '2533834493';
 
@@ -23,6 +24,13 @@ export default function PageDetailScreen() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
+  const pageResource = {
+    resourceType: 'page',
+    slug,
+    title: data?.title || title || 'Resource',
+    link: data?.link,
+  };
 
   const load = useCallback(async () => {
     try {
@@ -56,7 +64,13 @@ export default function PageDetailScreen() {
           <Icon name="arrow-back" size={20} color="#2C1810" />
         </TouchableOpacity>
         <Text style={styles.topBarTitle} numberOfLines={1}>{title || data?.title || ''}</Text>
-        <View style={styles.backBtn} />
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => toggleSaved(pageResource)}
+          accessibilityLabel={isSaved(pageResource) ? 'Remove from saved resources' : 'Save resource'}
+        >
+          <Icon name={isSaved(pageResource) ? 'bookmark' : 'bookmark-outline'} size={20} color="#C0392B" />
+        </TouchableOpacity>
       </View>
 
       {loading && (

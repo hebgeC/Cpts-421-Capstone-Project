@@ -5,15 +5,23 @@ import {
     ScrollView,
     StyleSheet,
     Modal,
-    Linking,
 } from "react-native";
 import RenderHTML from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
-import { WebView } from 'react-native-webview';
+import { useNavigation } from '@react-navigation/native';
 
 export default function DetailModal({ visible, onClose, title, time, location, openSlots, description, id }) {
     const { width } = useWindowDimensions();
+    const navigation = useNavigation();
+
+    const handleSignUp = () => {
+        onClose();
+        navigation.navigate('WebView', {
+            url: `https://rescue-mission.volunteerhub.com/vv2/event/${id}`,
+            title: title || 'Volunteer Sign Up',
+        });
+    };
     return (
         <Modal
             visible={visible}
@@ -98,7 +106,7 @@ export default function DetailModal({ visible, onClose, title, time, location, o
 
                     <View style={styles.row}>
                         <TouchableOpacity 
-                            onPress={() => Linking.openURL(`https://rescue-mission.volunteerhub.com/vv2/event/${id}`)}
+                            onPress={handleSignUp}
                             style={styles.closeBtn}
                         >
                             <Text style={styles.closeBtnText}>Sign Up</Text>

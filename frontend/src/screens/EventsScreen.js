@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   SafeAreaView, Linking, TextInput, Image, ActivityIndicator,
@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
+import MonthYearPicker from '../components/MonthYearPicker';
+import CalendarDatePicker from '../components/CalendarDatePicker';
 
 const MONTH_MAP = {
   '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
@@ -19,7 +21,26 @@ const MONTH_NAMES = [
 ];
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function monthKey(month, year) {
+  return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+function monthRange(month, year) {
+  const start = `${monthKey(month, year)}-01`;
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return { start, end: `${monthKey(month, year)}-${String(lastDay).padStart(2, '0')}` };
+}
+
+function formatSelectedDay(dateKey) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return `${MONTH_NAMES[month - 1]} ${day}, ${year}`;
 }
 
 // "2026-11-27 15:00:00" -> "3:00 PM"
@@ -55,6 +76,8 @@ function mapEvent(e) {
 
   return {
     id: e.id,
+    dateKey: datePart,
+    monthKey: datePart?.slice(0, 7),
     month,
     day,
     datetime: formatDatetimeRange(e.startDate, e.endDate),
@@ -69,48 +92,88 @@ function mapEvent(e) {
 }
 
 export default function EventsScreen() {
+  const today = new Date();
   const [searchText, setSearchText] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState({
+    month: today.getMonth(),
+    year: today.getFullYear(),
+  });
+  const [selectedDay, setSelectedDay] = useState(todayISO());
+  const [monthPickerVisible, setMonthPickerVisible] = useState(false);
+  const [dayPickerVisible, setDayPickerVisible] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
   const [noUpcoming, setNoUpcoming] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const fetchRequestId = useRef(0);
 
   const fetchEvents = useCallback(async () => {
+    const requestId = ++fetchRequestId.current;
     try {
       setError(null);
+      setLoading(true);
 
-      const [upcomingRes, pastRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/events?per_page=50`),
-        fetch(`${API_BASE_URL}/events?per_page=50&start_date=2000-01-01&end_date=${todayISO()}`),
-      ]);
-      const upcomingJson = await upcomingRes.json();
-      const pastJson = await pastRes.json();
+      let upcoming;
+      let past;
+      if (dateFilter === 'all') {
+        const [upcomingRes, pastRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/events?per_page=50`),
+          fetch(`${API_BASE_URL}/events?per_page=50&start_date=2000-01-01&end_date=${todayISO()}`),
+        ]);
+        if (!upcomingRes.ok || !pastRes.ok) throw new Error('Request failed');
+        const upcomingJson = await upcomingRes.json();
+        const pastJson = await pastRes.json();
+        upcoming = (upcomingJson.events || []).map(mapEvent);
+        past = (pastJson.events || []).map(mapEvent).reverse();
+      } else {
+        const range = dateFilter === 'month'
+          ? monthRange(selectedMonth.month, selectedMonth.year)
+          : { start: selectedDay, end: selectedDay };
+        const response = await fetch(
+          `${API_BASE_URL}/events?per_page=100&start_date=${range.start}&end_date=${range.end}`
+        );
+        if (!response.ok) throw new Error('Request failed');
+        const data = await response.json();
+        const events = (data.events || []).map(mapEvent);
+        upcoming = events.filter((event) => event.dateKey >= todayISO());
+        past = events.filter((event) => event.dateKey < todayISO()).reverse();
+      }
 
-      const upcoming = (upcomingJson.events || []).map(mapEvent);
-      const past = (pastJson.events || []).map(mapEvent).reverse();
-
-      setNoUpcoming(upcoming.length === 0);
-      setUpcomingEvents(upcoming);
-      setPastEvents(past);
+      if (requestId === fetchRequestId.current) {
+        setNoUpcoming(upcoming.length === 0);
+        setUpcomingEvents(upcoming);
+        setPastEvents(past);
+      }
     } catch (e) {
-      setError('Could not load events. Please check your connection.');
+      if (requestId === fetchRequestId.current) {
+        setError('Could not load events. Please check your connection.');
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === fetchRequestId.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, []);
+  }, [dateFilter, selectedDay, selectedMonth]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
   const onRefresh = () => { setRefreshing(true); fetchEvents(); };
 
-  const filter = list =>
-    list.filter(e =>
-      e.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      e.venue.toLowerCase().includes(searchText.toLowerCase())
-    );
+  const filter = list => {
+    const selectedMonthKey = monthKey(selectedMonth.month, selectedMonth.year);
+    return list.filter(e =>
+      (e.title || '').toLowerCase().includes(searchText.toLowerCase()) ||
+      (e.venue || '').toLowerCase().includes(searchText.toLowerCase())
+    ).filter((e) => {
+      if (dateFilter === 'day') return e.dateKey === selectedDay;
+      if (dateFilter === 'month') return e.monthKey === selectedMonthKey;
+      return true;
+    });
+  };
 
   const renderEvent = (event, index, arr) => (
     <View key={event.id}>
@@ -152,9 +215,35 @@ export default function EventsScreen() {
 
   const filteredUpcoming = filter(upcomingEvents);
   const filteredPast = filter(pastEvents);
+  const activeFilterLabel = dateFilter === 'month'
+    ? `${MONTH_NAMES[selectedMonth.month]} ${selectedMonth.year}`
+    : dateFilter === 'day'
+      ? formatSelectedDay(selectedDay)
+      : null;
 
   return (
     <SafeAreaView style={styles.safe}>
+      <MonthYearPicker
+        visible={monthPickerVisible}
+        currentMonth={selectedMonth.month}
+        currentYear={selectedMonth.year}
+        onConfirm={(month, year) => {
+          setSelectedMonth({ month, year });
+          setDateFilter('month');
+          setMonthPickerVisible(false);
+        }}
+        onCancel={() => setMonthPickerVisible(false)}
+      />
+      <CalendarDatePicker
+        visible={dayPickerVisible}
+        value={selectedDay}
+        onConfirm={(date) => {
+          setSelectedDay(date);
+          setDateFilter('day');
+          setDayPickerVisible(false);
+        }}
+        onCancel={() => setDayPickerVisible(false)}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -177,26 +266,42 @@ export default function EventsScreen() {
               onChangeText={setSearchText}
             />
           </View>
-          <TouchableOpacity style={styles.findBtn}>
-            <Text style={styles.findBtnText}>Find Events</Text>
-          </TouchableOpacity>
         </View>
 
         {/* View toggle */}
         <View style={styles.viewToggleRow}>
-          <TouchableOpacity style={[styles.viewToggleBtn, styles.viewToggleBtnActive]}>
-            <Icon name="list" size={14} color="#FFFFFF" />
-            <Text style={styles.viewToggleLabelActive}>List</Text>
+          <TouchableOpacity
+            style={[styles.viewToggleBtn, dateFilter === 'all' && styles.viewToggleBtnActive]}
+            onPress={() => setDateFilter('all')}
+          >
+            <Icon name="list" size={14} color={dateFilter === 'all' ? '#FFFFFF' : '#555'} />
+            <Text style={dateFilter === 'all' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>List</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.viewToggleBtn}>
-            <Icon name="calendar-outline" size={14} color="#555" />
-            <Text style={styles.viewToggleLabel}>Month</Text>
+          <TouchableOpacity
+            style={[styles.viewToggleBtn, dateFilter === 'month' && styles.viewToggleBtnActive]}
+            onPress={() => setMonthPickerVisible(true)}
+          >
+            <Icon name="calendar-outline" size={14} color={dateFilter === 'month' ? '#FFFFFF' : '#555'} />
+            <Text style={dateFilter === 'month' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>Month</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.viewToggleBtn}>
-            <Icon name="today-outline" size={14} color="#555" />
-            <Text style={styles.viewToggleLabel}>Day</Text>
+          <TouchableOpacity
+            style={[styles.viewToggleBtn, dateFilter === 'day' && styles.viewToggleBtnActive]}
+            onPress={() => setDayPickerVisible(true)}
+          >
+            <Icon name="today-outline" size={14} color={dateFilter === 'day' ? '#FFFFFF' : '#555'} />
+            <Text style={dateFilter === 'day' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>Day</Text>
           </TouchableOpacity>
         </View>
+
+        {activeFilterLabel ? (
+          <View style={styles.activeFilterRow}>
+            <Icon name="calendar-outline" size={15} color="#C0392B" />
+            <Text style={styles.activeFilterText}>Showing events for {activeFilterLabel}</Text>
+            <TouchableOpacity onPress={() => setDateFilter('all')} style={styles.clearFilterButton}>
+              <Icon name="close-circle" size={18} color="#8B6B5A" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* Loading */}
         {loading && (
@@ -220,7 +325,7 @@ export default function EventsScreen() {
         {/* Content */}
         {!loading && !error && (
           <>
-            {noUpcoming && filteredUpcoming.length === 0 && (
+            {noUpcoming && dateFilter === 'all' && searchText === '' && (
               <View style={styles.noUpcomingBox}>
                 <Text style={styles.noUpcomingText}>There are no upcoming events.</Text>
               </View>
@@ -242,9 +347,15 @@ export default function EventsScreen() {
               </>
             )}
 
-            {filteredUpcoming.length === 0 && filteredPast.length === 0 && searchText !== '' && (
+            {filteredUpcoming.length === 0 && filteredPast.length === 0 && (searchText !== '' || dateFilter !== 'all') && (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>No events found for "{searchText}"</Text>
+                <Text style={styles.emptyStateText}>
+                  {searchText
+                    ? `No events found for "${searchText}"`
+                    : dateFilter === 'day'
+                      ? `No events scheduled for ${formatSelectedDay(selectedDay)}.`
+                      : `No events scheduled for ${MONTH_NAMES[selectedMonth.month]} ${selectedMonth.year}.`}
+                </Text>
               </View>
             )}
           </>
@@ -288,12 +399,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, height: 40,
   },
   searchInput: { flex: 1, fontSize: 13, color: '#2C1810' },
-  findBtn: {
-    backgroundColor: '#C0392B', borderRadius: 6,
-    paddingHorizontal: 14, height: 40,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  findBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   viewToggleRow: {
     flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10,
     gap: 8, borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
@@ -307,6 +412,13 @@ const styles = StyleSheet.create({
   viewToggleBtnActive: { backgroundColor: '#C0392B', borderColor: '#C0392B' },
   viewToggleLabel: { fontSize: 12, color: '#555', fontWeight: '600' },
   viewToggleLabelActive: { fontSize: 12, color: '#FFFFFF', fontWeight: '600' },
+  activeFilterRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#FDF6F0',
+    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+  },
+  activeFilterText: { flex: 1, fontSize: 13, color: '#4A3728', fontWeight: '600' },
+  clearFilterButton: { padding: 4 },
   loadingBox: { alignItems: 'center', paddingVertical: 50, gap: 14 },
   loadingText: { fontSize: 14, color: '#888888' },
   errorBox: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 30, gap: 12 },

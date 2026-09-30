@@ -14,7 +14,7 @@ const MONTHS = [
 ];
 
 const TODAY = new Date();
-const YEAR_RANGE = Array.from({ length: 21 }, (_, i) => TODAY.getFullYear() - 16 + i);
+const YEAR_RANGE = Array.from({ length: TODAY.getFullYear() - 2000 + 11 }, (_, i) => 2000 + i);
 const PICKER_ITEM_H = 44;
 
 export default function MonthYearPicker({ visible, currentMonth, currentYear, onConfirm, onCancel }) {

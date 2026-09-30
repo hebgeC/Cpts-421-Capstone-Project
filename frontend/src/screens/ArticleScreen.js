@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
   Image, Linking, useWindowDimensions,
 } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
+import { API_BASE_URL } from '../utils/api';
+import { SavedResourcesContext } from '../context/SavedResourcesContext';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -12,8 +14,25 @@ function formatDate(iso) {
 }
 
 export default function ArticleScreen({ route, navigation }) {
-  const { article } = route.params;
+  const { article: initialArticle } = route.params;
+  const [article, setArticle] = useState(initialArticle);
   const { width } = useWindowDimensions();
+  const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
+
+  useEffect(() => {
+    if (initialArticle.contentHtml || !initialArticle.id) return;
+    let mounted = true;
+    fetch(`${API_BASE_URL}/wpArticles/${initialArticle.id}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('Request failed');
+        return response.json();
+      })
+      .then((data) => {
+        if (mounted) setArticle({ ...initialArticle, ...data, kind: initialArticle.kind });
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [initialArticle]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -21,11 +40,20 @@ export default function ArticleScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={20} color="#2C1810" />
         </TouchableOpacity>
-        {article.link ? (
-          <TouchableOpacity style={styles.actionBtn} onPress={() => Linking.openURL(article.link)}>
-            <Icon name="open-outline" size={20} color="#2C1810" />
+        <View style={styles.actionGroup}>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => toggleSaved({ ...article, resourceType: 'article' })}
+            accessibilityLabel={isSaved(article) ? 'Remove from saved resources' : 'Save resource'}
+          >
+            <Icon name={isSaved(article) ? 'bookmark' : 'bookmark-outline'} size={20} color="#C0392B" />
           </TouchableOpacity>
-        ) : <View style={styles.actionBtn} />}
+          {article.link ? (
+            <TouchableOpacity style={styles.actionBtn} onPress={() => Linking.openURL(article.link)}>
+              <Icon name="open-outline" size={20} color="#2C1810" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -94,6 +122,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   backBtn: { padding: 8, backgroundColor: '#FDF6F0', borderRadius: 12 },
+  actionGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   actionBtn: { padding: 8, backgroundColor: '#FDF6F0', borderRadius: 12 },
   scrollContent: { paddingBottom: 20 },
   hero: { height: 220, backgroundColor: '#FDECEA' },

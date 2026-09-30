@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar, Platform } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 
-import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ExploreScreen from './src/screens/ExploreScreen';
 import EventsScreen from './src/screens/EventsScreen';
 import VolunteerScreen from './src/screens/VolunteerScreen';
 import ArticleScreen from './src/screens/ArticleScreen';
 import PageDetailScreen from './src/screens/PageDetailScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
+import InformationScreen from './src/screens/ProfileScreen';
 import WebViewScreen from './src/screens/WebViewScreen';
 import BookmarksScreen from './src/screens/BookmarksScreen';
-import { AuthContext } from './src/context/AuthContext';
+import { SavedResourcesProvider } from './src/context/SavedResourcesContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,7 +51,7 @@ function MainTabs() {
           else if (route.name === 'Events') iconName = focused ? 'calendar' : 'calendar-outline';
           else if (route.name === 'Volunteer') iconName = focused ? 'hand-left' : 'hand-left-outline';
           else if (route.name === 'Saved') iconName = focused ? 'bookmark' : 'bookmark-outline';
-          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+          else if (route.name === 'Information') iconName = focused ? 'information-circle' : 'information-circle-outline';
           return <Icon name={iconName} size={22} color={color} />;
         },
       })}
@@ -62,17 +61,14 @@ function MainTabs() {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Volunteer" component={VolunteerScreen} />
       <Tab.Screen name="Saved" component={BookmarksScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Information" component={InformationScreen} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, user, setUser }}>
+    <SavedResourcesProvider>
       <NavigationContainer>
         <StatusBar
           barStyle="dark-content"
@@ -80,30 +76,24 @@ export default function App() {
           translucent={false}
         />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!isLoggedIn ? (
-            <Stack.Screen name="Login" component={LoginScreen} />
-          ) : (
-            <>
-              <Stack.Screen name="Main" component={MainTabs} />
-              <Stack.Screen
-                name="Article"
-                component={ArticleScreen}
-                options={{ presentation: 'card', animation: 'slide_from_right' }}
-              />
-              <Stack.Screen
-                name="PageDetail"
-                component={PageDetailScreen}
-                options={{ presentation: 'card', animation: 'slide_from_right' }}
-              />
-              <Stack.Screen
-                name="WebView"
-                component={WebViewScreen}
-                options={{ presentation: 'card', animation: 'slide_from_right' }}
-              />
-            </>
-          )}
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen
+            name="Article"
+            component={ArticleScreen}
+            options={{ presentation: 'card', animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="PageDetail"
+            component={PageDetailScreen}
+            options={{ presentation: 'card', animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="WebView"
+            component={WebViewScreen}
+            options={{ presentation: 'card', animation: 'slide_from_right' }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
-    </AuthContext.Provider>
+    </SavedResourcesProvider>
   );
 }

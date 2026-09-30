@@ -30,6 +30,14 @@ function mapPost(post) {
   };
 }
 
+function mapResource(post) {
+  return {
+    ...mapPost(post),
+    contentHtml: undefined,
+    kind: post.categories?.includes(UPDATES_CATEGORY_ID) ? 'updates' : 'articles',
+  };
+}
+
 const fetchUpdates = async (req, res) => {
   try {
     const response = await axios.get(`${WP_BASE}/posts`, {
@@ -55,6 +63,31 @@ const fetchArticles = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to fetch articles" });
+  }
+};
+
+const fetchResources = async (req, res) => {
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const perPage = Math.min(Math.max(Number(req.query.per_page) || 10, 1), 20);
+  const category = req.query.kind === 'updates'
+    ? UPDATES_CATEGORY_ID
+    : req.query.kind === 'articles'
+      ? ARTICLES_CATEGORY_ID
+      : `${ARTICLES_CATEGORY_ID},${UPDATES_CATEGORY_ID}`;
+
+  try {
+    const response = await axios.get(`${WP_BASE}/posts`, {
+      params: { categories: category, per_page: perPage, page, _embed: true },
+    });
+    res.json({
+      resources: response.data.map(mapResource),
+      total: Number(response.headers['x-wp-total']) || response.data.length,
+      totalPages: Number(response.headers['x-wp-totalpages']) || 1,
+      page,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: 'Failed to fetch resources' });
   }
 };
 
@@ -102,4 +135,4 @@ const fetchPageBySlug = async (req, res) => {
   }
 };
 
-export { fetchUpdates, fetchArticles, fetchArticleById, fetchSiteMap, fetchPageBySlug };
+export { fetchUpdates, fetchArticles, fetchResources, fetchArticleById, fetchSiteMap, fetchPageBySlug };

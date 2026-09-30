@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
   ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
+import { SavedResourcesContext } from '../context/SavedResourcesContext';
+
+const RESOURCE_PAGE_SIZE = 10;
 
 const BUILT_IN_SECTIONS = [
   { key: 'articles', name: 'Articles', icon: '📰', bg: '#FDECEA', color: '#C0392B', description: 'Client stories' },
@@ -18,36 +21,74 @@ function formatDate(iso) {
 
 export default function ExploreScreen({ navigation }) {
   const [activeSection, setActiveSection] = useState(null);
-  const [articles, setArticles] = useState([]);
-  const [updates, setUpdates] = useState([]);
+  const [resources, setResources] = useState([]);
   const [siteCategories, setSiteCategories] = useState([]);
   const [siteItems, setSiteItems] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const requestId = useRef(0);
+  const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
+
+  const fetchResourcePage = useCallback(async (section, pageNumber) => {
+    const kind = section === 'articles' || section === 'updates'
+      ? `&kind=${section}`
+      : '';
+    const response = await fetch(
+      `${API_BASE_URL}/wpResources?page=${pageNumber}&per_page=${RESOURCE_PAGE_SIZE}${kind}`
+    );
+    if (!response.ok) throw new Error('Request failed');
+    return response.json();
+  }, []);
 
   const load = useCallback(async () => {
+    const currentRequest = ++requestId.current;
     try {
       setError(null);
-      const [articlesRes, updatesRes, siteMapRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/wpArticles`),
-        fetch(`${API_BASE_URL}/wpUpdates`),
+      setLoading(true);
+      const [resourcesData, siteMapRes] = await Promise.all([
+        fetchResourcePage(activeSection, 1),
         fetch(`${API_BASE_URL}/siteMap`),
       ]);
-      const articlesData = await articlesRes.json();
-      const updatesData = await updatesRes.json();
       const siteMapData = await siteMapRes.json();
-      setArticles((articlesData.articles || []).map((a) => ({ ...a, kind: 'articles' })));
-      setUpdates((updatesData || []).filter((u) => u.title).map((u) => ({ ...u, kind: 'updates' })));
+      if (currentRequest !== requestId.current) return;
+      setResources(resourcesData.resources || []);
+      setPage(1);
+      setTotalPages(resourcesData.totalPages || 1);
       setSiteCategories(siteMapData.categories || []);
       setSiteItems(siteMapData.items || []);
     } catch (e) {
-      setError('Could not load content. Please check your connection.');
+      if (currentRequest === requestId.current) {
+        setError('Could not load content. Please check your connection.');
+      }
     } finally {
-      setLoading(false);
+      if (currentRequest === requestId.current) setLoading(false);
     }
-  }, []);
+  }, [activeSection, fetchResourcePage]);
 
   useEffect(() => { load(); }, [load]);
+
+  const loadMore = useCallback(async () => {
+    if (loading || loadingMore || page >= totalPages) return;
+    const currentRequest = ++requestId.current;
+    setLoadingMore(true);
+    try {
+      const data = await fetchResourcePage(activeSection, page + 1);
+      if (currentRequest !== requestId.current) return;
+      setResources((current) => {
+        const existing = new Set(current.map((item) => `${item.kind}-${item.id}`));
+        return [...current, ...(data.resources || []).filter((item) => !existing.has(`${item.kind}-${item.id}`))];
+      });
+      setPage(page + 1);
+      setTotalPages(data.totalPages || 1);
+    } catch (e) {
+      // Keep the already-loaded resources visible; the next scroll can retry.
+    } finally {
+      if (currentRequest === requestId.current) setLoadingMore(false);
+    }
+  }, [activeSection, fetchResourcePage, loading, loadingMore, page, totalPages]);
 
   const sections = [
     ...BUILT_IN_SECTIONS,
@@ -57,7 +98,8 @@ export default function ExploreScreen({ navigation }) {
   ];
 
   const handleSectionPress = (key) => {
-    setActiveSection((current) => (current === key ? null : key));
+    const nextSection = activeSection === key ? null : key;
+    setActiveSection(nextSection);
   };
 
   const handleSiteItemPress = (item) => {
@@ -73,18 +115,23 @@ export default function ExploreScreen({ navigation }) {
     ? siteCategories.find((c) => c.key === activeSection)?.title
     : null;
 
-  const listed = activeSection === 'updates' ? updates
-    : activeSection === 'articles' ? articles
-    : isSiteCategory ? []
-    : [...updates, ...articles];
-
   const siteItemsForCategory = isSiteCategory
     ? siteItems.filter((i) => i.category === activeSection)
     : [];
 
+  const handleScroll = ({ nativeEvent }) => {
+    if (isSiteCategory) return;
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 240) loadMore();
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={200}
+      >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Get Involved</Text>
           <Text style={styles.headerSub}>Find ways to serve your community</Text>
@@ -156,17 +203,40 @@ export default function ExploreScreen({ navigation }) {
                   <Text style={styles.listCategory}>{item.type === 'external' ? 'On trm.org' : activeCategoryTitle}</Text>
                   <Text style={styles.listTitle} numberOfLines={2}>{item.title}</Text>
                 </View>
-                <Icon name={item.type === 'external' ? 'open-outline' : 'chevron-forward'} size={16} color="#CCCCCC" />
+                <View style={styles.listActions}>
+                  <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={() => toggleSaved({
+                      ...item,
+                      resourceType: item.type === 'external' ? 'external' : 'page',
+                      categoryTitle: activeCategoryTitle,
+                    })}
+                    accessibilityLabel={isSaved({
+                      ...item,
+                      resourceType: item.type === 'external' ? 'external' : 'page',
+                    }) ? 'Remove from saved resources' : 'Save resource'}
+                  >
+                    <Icon
+                      name={isSaved({
+                        ...item,
+                        resourceType: item.type === 'external' ? 'external' : 'page',
+                      }) ? 'bookmark' : 'bookmark-outline'}
+                      size={20}
+                      color="#C0392B"
+                    />
+                  </TouchableOpacity>
+                  <Icon name={item.type === 'external' ? 'open-outline' : 'chevron-forward'} size={16} color="#CCCCCC" />
+                </View>
               </TouchableOpacity>
             ))}
 
-            {!isSiteCategory && listed.length === 0 && (
+            {!isSiteCategory && resources.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>Nothing here yet.</Text>
               </View>
             )}
 
-            {!isSiteCategory && listed.map((item) => (
+            {!isSiteCategory && resources.map((item) => (
               <TouchableOpacity
                 key={`${item.kind}-${item.id}`}
                 style={styles.listCard}
@@ -192,9 +262,28 @@ export default function ExploreScreen({ navigation }) {
                     <Text style={styles.listMetaText}>{formatDate(item.date)}</Text>
                   </View>
                 </View>
-                <Icon name="chevron-forward" size={16} color="#CCCCCC" />
+                <View style={styles.listActions}>
+                  <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={() => toggleSaved({ ...item, resourceType: 'article' })}
+                    accessibilityLabel={isSaved(item) ? 'Remove from saved resources' : 'Save resource'}
+                  >
+                    <Icon
+                      name={isSaved(item) ? 'bookmark' : 'bookmark-outline'}
+                      size={20}
+                      color="#C0392B"
+                    />
+                  </TouchableOpacity>
+                  <Icon name="chevron-forward" size={16} color="#CCCCCC" />
+                </View>
               </TouchableOpacity>
             ))}
+
+            {!isSiteCategory && loadingMore && (
+              <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color="#C0392B" />
+              </View>
+            )}
           </>
         )}
 
@@ -240,8 +329,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
   listInfo: { flex: 1 },
+  listActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  bookmarkButton: { padding: 8 },
   listCategory: { fontSize: 11, color: '#C0392B', fontWeight: '700', letterSpacing: 0.5, marginBottom: 3, textTransform: 'uppercase' },
   listTitle: { fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 5 },
   listMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   listMetaText: { fontSize: 12, color: '#AAAAAA' },
+  loadingMore: { alignItems: 'center', paddingVertical: 18 },
 });

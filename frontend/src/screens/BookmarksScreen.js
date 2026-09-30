@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useContext } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import { API_BASE_URL } from '../utils/api';
+import { SavedResourcesContext } from '../context/SavedResourcesContext';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -11,75 +11,83 @@ function formatDate(iso) {
 }
 
 export default function BookmarksScreen({ navigation }) {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { savedResources, removeSaved } = useContext(SavedResourcesContext);
 
-  const load = useCallback(async () => {
-    try {
-      setError(null);
-      const response = await fetch(`${API_BASE_URL}/wpArticles`);
-      const data = await response.json();
-      setArticles((data.articles || []).slice(0, 3).map((a) => ({ ...a, kind: 'articles' })));
-    } catch (e) {
-      setError('Could not load saved resources. Please check your connection.');
-    } finally {
-      setLoading(false);
+  const openResource = (resource) => {
+    if (resource.resourceType === 'page') {
+      navigation.navigate('PageDetail', { slug: resource.slug, title: resource.title });
+      return;
     }
-  }, []);
+    if (resource.resourceType === 'external') {
+      navigation.navigate('WebView', { url: resource.url, title: resource.title });
+      return;
+    }
+    navigation.navigate('Article', { article: resource });
+  };
 
-  useEffect(() => { load(); }, [load]);
+  const getCategory = (resource) => {
+    if (resource.resourceType === 'page') return resource.categoryTitle || 'Resource';
+    if (resource.resourceType === 'external') return 'On trm.org';
+    return resource.kind === 'updates' ? 'Update' : 'Client Story';
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Saved Resources</Text>
-          <Text style={styles.headerSub}>{articles.length} items saved</Text>
+          <Text style={styles.headerSub}>{savedResources.length} items saved</Text>
         </View>
 
-        {loading && (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#C0392B" />
+        {savedResources.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Icon name="bookmark-outline" size={34} color="#C0392B" />
+            <Text style={styles.emptyTitle}>No saved resources yet</Text>
+            <Text style={styles.emptyText}>Use the bookmark icon on a resource to add it here.</Text>
           </View>
-        )}
-
-        {!loading && error && (
-          <View style={styles.errorBox}>
-            <Icon name="wifi-outline" size={24} color="#C0392B" />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={load}>
-              <Text style={styles.retryBtnText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {!loading && !error && (
+        ) : (
           <View style={styles.collectionCard}>
             <View style={styles.collectionHeader}>
-              <Text style={styles.collectionTitle}>My Reading List</Text>
+              <Text style={styles.collectionTitle}>My Resources</Text>
               <Icon name="folder-outline" size={18} color="#C0392B" />
             </View>
-            {articles.map((article, i) => (
-              <TouchableOpacity
-                key={article.id}
-                style={[styles.bookmarkItem, i < articles.length - 1 && styles.bookmarkItemBorder]}
-                activeOpacity={0.85}
-                onPress={() => navigation.navigate('Article', { article })}
+            {savedResources.map((resource, i) => (
+              <View
+                key={resource.savedKey}
+                style={[styles.bookmarkItem, i < savedResources.length - 1 && styles.bookmarkItemBorder]}
               >
-                <View style={styles.bookmarkIcon}>
-                  <Icon name="document-text-outline" size={22} color="#C0392B" />
-                </View>
-                <View style={styles.bookmarkInfo}>
-                  <Text style={styles.bookmarkCategory}>Client Story</Text>
-                  <Text style={styles.bookmarkTitle} numberOfLines={2}>{article.title}</Text>
-                  <View style={styles.bookmarkMeta}>
-                    <Icon name="time-outline" size={12} color="#AAAAAA" />
-                    <Text style={styles.bookmarkMetaText}>{formatDate(article.date)}</Text>
+                <TouchableOpacity
+                  style={styles.bookmarkMain}
+                  activeOpacity={0.85}
+                  onPress={() => openResource(resource)}
+                >
+                  <View style={styles.bookmarkIcon}>
+                    <Icon
+                      name={resource.icon || (resource.resourceType === 'external' ? 'open-outline' : 'document-text-outline')}
+                      size={22}
+                      color="#C0392B"
+                    />
                   </View>
-                </View>
-                <Icon name="chevron-forward" size={16} color="#CCCCCC" />
-              </TouchableOpacity>
+                  <View style={styles.bookmarkInfo}>
+                    <Text style={styles.bookmarkCategory}>{getCategory(resource)}</Text>
+                    <Text style={styles.bookmarkTitle} numberOfLines={2}>{resource.title}</Text>
+                    {resource.date ? (
+                      <View style={styles.bookmarkMeta}>
+                        <Icon name="time-outline" size={12} color="#AAAAAA" />
+                        <Text style={styles.bookmarkMetaText}>{formatDate(resource.date)}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Icon name="chevron-forward" size={16} color="#CCCCCC" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeSaved(resource)}
+                  accessibilityLabel={`Remove ${resource.title} from saved resources`}
+                >
+                  <Icon name="trash-outline" size={19} color="#C0392B" />
+                </TouchableOpacity>
+              </View>
             ))}
           </View>
         )}
@@ -98,11 +106,9 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#2C1810', letterSpacing: -0.5 },
   headerSub: { fontSize: 14, color: '#8B6B5A', marginTop: 2 },
-  loadingBox: { alignItems: 'center', paddingVertical: 50, gap: 14 },
-  errorBox: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 30, gap: 12 },
-  errorText: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 },
-  retryBtn: { backgroundColor: '#C0392B', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 },
-  retryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  emptyState: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 64, gap: 8 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#2C1810', marginTop: 6 },
+  emptyText: { fontSize: 13, color: '#8B6B5A', lineHeight: 19, textAlign: 'center' },
   collectionCard: {
     backgroundColor: '#FFFFFF', marginHorizontal: 20, borderRadius: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
@@ -113,8 +119,9 @@ const styles = StyleSheet.create({
     padding: 16, backgroundColor: '#FEF0EE',
   },
   collectionTitle: { fontSize: 14, fontWeight: '700', color: '#C0392B' },
-  bookmarkItem: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  bookmarkItem: { flexDirection: 'row', alignItems: 'center' },
   bookmarkItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
+  bookmarkMain: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
   bookmarkIcon: {
     width: 48, height: 48, borderRadius: 14, backgroundColor: '#FDF6F0',
     alignItems: 'center', justifyContent: 'center',
@@ -124,6 +131,7 @@ const styles = StyleSheet.create({
   bookmarkTitle: { fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 5 },
   bookmarkMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bookmarkMetaText: { fontSize: 12, color: '#AAAAAA' },
+  removeButton: { paddingHorizontal: 16, paddingVertical: 24 },
   tipBox: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 20, marginTop: 16, padding: 14,
