@@ -19,3 +19,126 @@
 == Usage
 
 ...
+
+# Tacoma Rescue Mission Unified Mobile App
+
+## Project summary
+
+### One-sentence description of the project
+
+The Tacoma Rescue Mission Unified Mobile App gives community members one mobile
+destination for TRM news, services, events, volunteer opportunities, and saved
+resources.
+
+### Additional information about the project
+
+This project turns Tacoma Rescue Mission's public information and volunteer tools
+into a focused cross-platform application. The Expo React Native frontend presents
+live stories and updates from trm.org, a categorized directory of services and
+ways to get involved, searchable community events, and a VolunteerHub-powered
+shift calendar. Users can open supported websites without leaving the app and can
+bookmark useful articles and program pages for quick access later. A Node.js and
+Express backend acts as an integration layer for the WordPress, Tribe Events, and
+VolunteerHub APIs, normalizing their responses into mobile-friendly data.
+
+## Installation
+
+### Prerequisites
+
+- Git.
+- Node.js 20 or newer and npm.
+- Ruby 2.6.10 or newer and Bundler. Ruby dependencies are primarily needed for
+  CocoaPods and native iOS development.
+- A valid VolunteerHub API key for loading volunteer shifts.
+- Expo Go on a physical device, or an Android/iOS simulator, for mobile testing.
+- macOS with Xcode and CocoaPods when building the native iOS project.
+
+### Add-ons
+
+- Expo and React Native provide the cross-platform mobile runtime.
+- React Navigation provides the bottom-tab and stack navigation systems.
+- React Native WebView keeps supported external pages and volunteer registration
+  inside the application.
+- React Native Render HTML displays content received from the TRM WordPress API.
+- Expo SecureStore persists saved resources on native devices; web builds use
+  browser local storage.
+- Express and Axios provide the backend API and upstream service integrations.
+- WordPress and Tribe Events REST APIs supply TRM stories, pages, updates, and
+  community events.
+- VolunteerHub supplies volunteer shift availability and registration details.
+- Expo Application Services (EAS) configuration supports preview and production
+  mobile builds.
+
+### Installation Steps
+
+After cloning the repository, open a terminal in the project root and run:
+
+```bash
+npm install
+npm --prefix backend install
+npm --prefix frontend install
+cp backend/.env.example backend/.env
+cd frontend
+bundle install
+cd ..
+```
+
+On Windows PowerShell, replace the `cp` command with:
+
+```powershell
+Copy-Item backend/.env.example backend/.env
+```
+
+Open `backend/.env` and set `VOLUNTEERHUB_API_KEY` to a valid VolunteerHub API
+key. The retained WordPress login variables are not required while the sign-in
+flow is disconnected.
+
+Start the frontend and backend together from the project root:
+
+```bash
+npm start
+```
+
+The Express backend runs on port 3000 and Expo displays options for opening the
+app in Expo Go, an emulator, a simulator, or a web browser. The services can also
+be started independently with `npm run backend` and `npm run frontend`.
+
+## Functionality
+
+1. Launch the app; the current build opens directly to the main navigation without
+   requiring a sign-in.
+2. Use Home to read featured TRM stories, organizational updates, and recent
+   articles pulled from trm.org.
+3. Open Explore to browse articles, updates, programs, services, donation links,
+   and contact information. Additional resources load automatically while
+   scrolling.
+4. Tap a bookmark icon on an article or resource to add it to Saved Resources.
+   Open the Saved tab to revisit or remove saved items.
+5. Open Events to search the TRM event feed. Use List to see the default feed,
+   Month to choose a month and year, or Day to choose a specific calendar date.
+6. Open Volunteer to select a month and date, inspect available shifts, and tap
+   Sign Up to complete registration in the in-app VolunteerHub page.
+7. Open Information for donation, in-kind giving, organization, and support links.
+8. Pull down on the Events page to refresh its data. Screens that fail to load
+   because of a temporary network problem provide retry controls where applicable.
+
+## Known Problems
+
+- Production builds cannot reach the backend until `PRODUCTION_API_URL` in
+  `frontend/src/utils/api.js` is replaced with the deployed backend URL. A build
+  using the placeholder address will show connection errors on API-backed pages.
+- Volunteer shifts require `VOLUNTEERHUB_API_KEY` in `backend/.env`. If the value
+  is missing or invalid, the volunteer endpoints return an error and the calendar
+  cannot populate; see `getVolunteerHubApiKey` in
+  `backend/controllers/eventController.js`.
+- Month-filtered event requests currently load a maximum of 100 results without
+  requesting additional pages. A month containing more than 100 events will omit
+  the remaining entries; see `fetchEvents` in
+  `frontend/src/screens/EventsScreen.js`.
+- Most content depends on live TRM and VolunteerHub services, so there is no full
+  offline mode. Saved metadata remains on the device, but opening a saved article
+  may still require the backend to retrieve its full content.
+- `frontend/src/screens/LoginScreen.js` and
+  `frontend/src/context/AuthContext.js` are intentionally retained but disconnected
+  from `frontend/App.js`. They are not part of the current user flow and should be
+  treated as dormant code until authentication is revisited.
