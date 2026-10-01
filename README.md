@@ -193,8 +193,5 @@ The backend listens on port `3000` by default and exposes the frontend-facing ro
 
 ## Known Problems
 
-- **Production API URL is not configured.** `frontend/src/utils/api.js` still contains `https://REPLACE-WITH-YOUR-RAILWAY-URL.up.railway.app`. A production build will fail to load backend-powered content until `PRODUCTION_API_URL` is replaced with the deployed HTTPS backend URL. Development builds discover the local Expo host automatically.
-- **Volunteer shifts require an external credential.** If `VOLUNTEERHUB_API_KEY` is absent or invalid, the backend volunteer routes return HTTP 500. `frontend/src/components/CalendarView.js` currently catches page-request failures and displays an empty calendar instead of a visible configuration or network error. Reproduce this by starting the backend without the key and opening the Volunteer tab.
-- **The login implementation is not connected to the active app.** `frontend/src/screens/LoginScreen.js` expects authentication setters from `AuthContext`, but `frontend/App.js` does not mount an authentication provider or register the login screen. The backend also does not currently mount a login route. The app therefore opens directly to its main tabs.
 - **The `npm run dev` helper is platform-specific.** The root script calls `dev.sh`, which requires Bash and `tmux`; it will not run in ordinary Windows PowerShell. Use `npm start`, or run `npm run backend` and `npm run frontend` in separate terminals.
 - **Automated verification is limited.** The root, backend, and current frontend package scripts do not define an end-to-end or backend test suite, so the live WordPress, event, WebView, and VolunteerHub paths require manual testing when integrations change.
