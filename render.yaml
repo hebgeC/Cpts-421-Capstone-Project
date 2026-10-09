@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: trm-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: VOLUNTEERHUB_API_KEY
+        sync: false
+      - key: WP_SITE_URL
+        value: https://www.trm.org
+      - key: WP_ADMIN_USERNAME
+        sync: false
+      - key: WP_ADMIN_APP_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
