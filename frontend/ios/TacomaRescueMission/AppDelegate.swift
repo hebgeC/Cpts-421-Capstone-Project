@@ -24,7 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     window = UIWindow(frame: UIScreen.main.bounds)
 
     factory.startReactNative(
-      withModuleName: "TacomaRescueMission",
+      // Expo's registerRootComponent() always registers under "main"
+      // (see node_modules/expo/src/launch/registerRootComponent.tsx),
+      // regardless of the app's display/module name.
+      withModuleName: "main",
       in: window,
       launchOptions: launchOptions
     )

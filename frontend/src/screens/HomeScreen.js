@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
+import useIsConnected from '../hooks/useIsConnected';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -16,8 +17,14 @@ export default function HomeScreen({ navigation }) {
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isConnected = useIsConnected();
 
   const load = useCallback(async () => {
+    if (isConnected === false) {
+      setError("You're offline. This content needs an internet connection.");
+      setLoading(false);
+      return;
+    }
     try {
       setError(null);
       const [articlesRes, updatesRes] = await Promise.all([
@@ -33,7 +40,7 @@ export default function HomeScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isConnected]);
 
   useEffect(() => { load(); }, [load]);
 

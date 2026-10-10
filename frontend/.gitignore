@@ -1,8 +1,11 @@
 node_modules/
 ios/Pods/
 ios/build/
+ios/**/xcuserdata/
 android/build/
 android/.gradle/
 .env
 *.keystore
+.expo/prebuild/
+.expo/*.log
 

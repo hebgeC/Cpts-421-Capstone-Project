@@ -5,6 +5,8 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
@@ -15,6 +17,7 @@ if linkage != nil
 end
 
 target 'TacomaRescueMission' do
+  use_expo_modules!
   config = use_native_modules!
 
   use_react_native!(
@@ -30,5 +33,22 @@ target 'TacomaRescueMission' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # fmt 11's FMT_STRING macro trips newer Clang's stricter consteval checks
+    # (breaks the Folly/glog build under recent Xcode). fmt's own base.h
+    # unconditionally redefines FMT_USE_CONSTEVAL with no #ifndef guard, so a
+    # compiler -D flag can't override it — patch the vendored header directly.
+    fmt_header = File.join(Pod::Config.instance.installation_root.to_s, 'Pods/fmt/include/fmt/base.h')
+    if File.exist?(fmt_header)
+      contents = File.read(fmt_header)
+      patched = contents.sub(
+        /\/\/ Detect consteval.*?\n#if !defined\(__cpp_lib_is_constant_evaluated\).*?\n(?:#.*\n)*?#endif\n/,
+        "// Hardcoded to 0: newer Clang rejects valid FMT_STRING format strings\n// as non-constant expressions under this fmt version. See Podfile.\n#define FMT_USE_CONSTEVAL 0\n"
+      )
+      if patched != contents
+        File.chmod(0644, fmt_header)
+        File.write(fmt_header, patched)
+      end
+    end
   end
 end
