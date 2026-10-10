@@ -230,7 +230,7 @@ export default function CalendarView() {
             <View style={styles.gridSection}>
             {/* ── Month navigation header ── */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+                <TouchableOpacity accessibilityLabel="Previous month" onPress={prevMonth} style={styles.navBtn}>
                     <Text style={styles.navArrow}>‹</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openPicker} style={styles.monthYearBtn}>
@@ -239,7 +239,7 @@ export default function CalendarView() {
                     </Text>
                     <Text style={styles.monthYearCaret}>▾</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+                <TouchableOpacity accessibilityLabel="Next month" onPress={nextMonth} style={styles.navBtn}>
                     <Text style={styles.navArrow}>›</Text>
                 </TouchableOpacity>
             </View>

@@ -63,17 +63,17 @@ export default function CalendarDatePicker({ visible, value, onConfirm, onCancel
           <Text style={styles.title}>Select a day</Text>
 
           <View style={styles.monthNavigation}>
-            <TouchableOpacity style={styles.yearButton} onPress={() => moveMonth(-12)}>
+            <TouchableOpacity accessibilityLabel="Previous year" style={styles.yearButton} onPress={() => moveMonth(-12)}>
               <Icon name="play-back" size={17} color="#8B6B5A" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.navigationButton} onPress={() => moveMonth(-1)}>
+            <TouchableOpacity accessibilityLabel="Previous month" style={styles.navigationButton} onPress={() => moveMonth(-1)}>
               <Icon name="chevron-back" size={20} color="#2C1810" />
             </TouchableOpacity>
             <Text style={styles.monthTitle}>{MONTHS[displayMonth]} {displayYear}</Text>
-            <TouchableOpacity style={styles.navigationButton} onPress={() => moveMonth(1)}>
+            <TouchableOpacity accessibilityLabel="Next month" style={styles.navigationButton} onPress={() => moveMonth(1)}>
               <Icon name="chevron-forward" size={20} color="#2C1810" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.yearButton} onPress={() => moveMonth(12)}>
+            <TouchableOpacity accessibilityLabel="Next year" style={styles.yearButton} onPress={() => moveMonth(12)}>
               <Icon name="play-forward" size={17} color="#8B6B5A" />
             </TouchableOpacity>
           </View>
@@ -92,6 +92,7 @@ export default function CalendarDatePicker({ visible, value, onConfirm, onCancel
                 <View key={`${index}-${day || 'empty'}`} style={styles.dayCell}>
                   {day ? (
                     <TouchableOpacity
+                      accessibilityLabel={`Select ${dateKey}`}
                       style={[styles.dayButton, selected && styles.dayButtonSelected]}
                       onPress={() => setSelectedDate(dateKey)}
                     >

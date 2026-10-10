@@ -67,6 +67,26 @@ cd frontend
 npm start
 ```
 
+## Run Both Test Suites
+
+From `TRM_app`, run:
+
+```bash
+npm test
+```
+
+This runs the backend and frontend tests concurrently, labels their output, and
+returns a nonzero exit code if either suite fails. Both suites run to completion.
+Install dependencies in both `backend` and `frontend` before running tests.
+
+For both suites with coverage reports:
+
+```bash
+npm run test:coverage
+```
+
+Reports are generated in `backend/coverage` and `frontend/coverage`.
+
 ## Notes
 
 - Backend default port is `3000` (as logged by the server).

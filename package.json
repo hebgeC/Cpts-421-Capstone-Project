@@ -6,7 +6,9 @@
     "backend": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run start",
     "start": "concurrently -k -n backend,frontend -c green,cyan \"npm run backend\" \"npm run frontend\"",
-    "dev": "./dev.sh"
+    "dev": "./dev.sh",
+    "test": "concurrently -n backend,frontend -c green,cyan \"npm --prefix backend test\" \"npm --prefix frontend test\"",
+    "test:coverage": "concurrently -n backend,frontend -c green,cyan \"npm --prefix backend run test:coverage\" \"npm --prefix frontend run test:coverage\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

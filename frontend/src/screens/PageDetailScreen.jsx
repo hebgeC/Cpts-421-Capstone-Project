@@ -60,7 +60,7 @@ export default function PageDetailScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity accessibilityLabel="Go back" style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={20} color="#2C1810" />
         </TouchableOpacity>
         <Text style={styles.topBarTitle} numberOfLines={1}>{title || data?.title || ''}</Text>

@@ -6,3 +6,4 @@ android/.gradle/
 .env
 *.keystore
 .DS_Store
+backend/coverage/
