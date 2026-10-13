@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tacomarescuemission"
@@ -12,6 +13,7 @@
     "android": {
       "package": "com.tacomarescuemission",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FDF6F0"
       }
     },
@@ -23,6 +25,12 @@
       "expo-secure-store",
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e7530b94-17bc-41fd-bb3d-9862d4e6cac8"
+      }
+    },
+    "owner": "efraziers-team"
   }
 }
