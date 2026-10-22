@@ -2,7 +2,8 @@ import axios from "axios";
 import { decodeEntities } from "../utils/textUtils.js";
 import { CATEGORIES, SITE_PAGES } from "../config/siteMap.js";
 
-const WP_BASE = "https://www.trm.org/wp-json/wp/v2";
+// Staging load tests can point at a controlled WordPress-compatible upstream.
+const wpBase = () => (process.env.WP_API_BASE_URL || "https://www.trm.org/wp-json/wp/v2").replace(/\/+$/, '');
 
 const UPDATES_CATEGORY_ID = 14; // "updates"
 const ARTICLES_CATEGORY_ID = 1; // "client-stories"
@@ -40,7 +41,7 @@ function mapResource(post) {
 
 const fetchUpdates = async (req, res) => {
   try {
-    const response = await axios.get(`${WP_BASE}/posts`, {
+    const response = await axios.get(`${wpBase()}/posts`, {
       params: { categories: UPDATES_CATEGORY_ID, per_page: 20, _embed: true },
     });
     res.json(response.data.map(mapPost));
@@ -53,7 +54,7 @@ const fetchUpdates = async (req, res) => {
 const fetchArticles = async (req, res) => {
   const page = Number(req.query.page) || 1;
   try {
-    const response = await axios.get(`${WP_BASE}/posts`, {
+    const response = await axios.get(`${wpBase()}/posts`, {
       params: { categories: ARTICLES_CATEGORY_ID, per_page: 20, page, _embed: true },
     });
     res.json({
@@ -76,7 +77,7 @@ const fetchResources = async (req, res) => {
       : `${ARTICLES_CATEGORY_ID},${UPDATES_CATEGORY_ID}`;
 
   try {
-    const response = await axios.get(`${WP_BASE}/posts`, {
+    const response = await axios.get(`${wpBase()}/posts`, {
       params: { categories: category, per_page: perPage, page, _embed: true },
     });
     res.json({
@@ -93,7 +94,7 @@ const fetchResources = async (req, res) => {
 
 const fetchArticleById = async (req, res) => {
   try {
-    const response = await axios.get(`${WP_BASE}/posts/${req.params.id}`, {
+    const response = await axios.get(`${wpBase()}/posts/${req.params.id}`, {
       params: { _embed: true },
     });
     res.json(mapPost(response.data));
@@ -115,7 +116,7 @@ const fetchPageBySlug = async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`${WP_BASE}/pages`, {
+    const response = await axios.get(`${wpBase()}/pages`, {
       params: { slug, _embed: true },
     });
     const page = response.data[0];

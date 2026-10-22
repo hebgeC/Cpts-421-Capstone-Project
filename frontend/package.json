@@ -10,7 +10,9 @@
     "publish:ios": "eas build --platform ios --profile production --non-interactive --auto-submit",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --runInBand --coverage"
+    "test:coverage": "jest --runInBand --coverage",
+    "test:perf:page": "playwright test page-load.spec.js",
+    "test:perf:calendar": "playwright test calendar-load.spec.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -35,6 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@playwright/test": "^1.64.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
     "@types/react": "~19.1.10",

@@ -87,6 +87,130 @@ npm run test:coverage
 
 Reports are generated in `backend/coverage` and `frontend/coverage`.
 
+## Performance tests
+
+### One-time performance-test setup
+
+Install the backend and frontend dependencies, Playwright's Chromium browser,
+and k6:
+
+```powershell
+npm install
+npm --prefix backend install
+npm --prefix frontend install
+Push-Location frontend
+npx playwright install chromium
+Pop-Location
+winget install k6 --source winget
+```
+
+Open a new terminal after installing k6 if `k6` is not yet recognized. The
+[official k6 installation guide](https://grafana.com/docs/k6/latest/set-up/install-k6/)
+lists other installation options.
+
+The browser performance tests use an Expo web export. For local runs, start the
+backend with the controlled WordPress fixture so `/wpArticles` and `/wpUpdates`
+return predictable responses. The calendar test also needs a valid
+`VOLUNTEERHUB_API_KEY` in `backend/.env` because it calls the live VolunteerHub
+service through the backend.
+
+### Start the local performance-test services
+
+Use separate PowerShell terminals from the repository root.
+
+**Terminal 1: start the WordPress fixture**
+
+```powershell
+cd backend
+node performance/mock-wordpress.js
+```
+
+**Terminal 2: start the backend connected to the fixture**
+
+```powershell
+cd backend
+$env:WP_API_BASE_URL = 'http://localhost:3101/wp-json/wp/v2'
+npm start
+```
+
+**Terminal 3: build and serve the web app**
+
+```powershell
+cd frontend
+$env:EXPO_PUBLIC_API_BASE_URL = 'http://localhost:3000'
+npx expo export --platform web --clear
+npx expo serve
+```
+
+The Expo server normally serves the export at `http://localhost:8081`. Keep
+these three terminals running while you run the tests below in another terminal.
+
+### Measure Home page load time
+
+From the repository root:
+
+```powershell
+cd frontend
+$env:PAGE_URL = 'http://localhost:8081'
+npm run test:perf:page
+```
+
+This runs 20 cold browser loads and checks that p95 is at most 3 seconds. The
+test records its result in
+`frontend/performance/results/page-load.json`.
+
+### Measure Volunteer calendar load time
+
+From the repository root:
+
+```powershell
+cd frontend
+$env:PAGE_URL = 'http://localhost:8081'
+npm run test:perf:calendar
+```
+
+This runs five samples. Each sample starts timing when the Volunteer tab is
+selected and ends after the month API requests complete and the loaded calendar
+renders. It requires 10 or more successful month-page responses and checks for
+a p95 of at most 3 seconds. VolunteerHub requests are live unless
+`CALENDAR_PERF_MOCK_API=1` is set. Results are written to
+`frontend/performance/results/calendar-load.json`.
+
+### Measure concurrent Home users
+
+For a short local smoke run, keep the WordPress fixture and backend running,
+open another terminal in `backend/`, and run:
+
+```powershell
+cd backend
+k6 run -e BASE_URL=http://localhost:3000 -e TARGET_VUS=10 -e RAMP_DURATION=5s -e HOLD_DURATION=15s -e RAMP_DOWN_DURATION=5s -e THINK_SECONDS=1 performance/home-load.js
+```
+
+This test sends the Home API requests directly to the backend. A 30,000-user
+test should target a suitably provisioned staging environment, with enough load
+generator capacity. To configure that run in PowerShell:
+
+```powershell
+cd backend
+$env:BASE_URL = 'https://your-staging-backend.example'
+$env:TARGET_VUS = '30000'
+$env:ALLOW_HIGH_LOAD = '1'
+$env:RAMP_DURATION = '10m'
+$env:HOLD_DURATION = '30m'
+$env:RAMP_DOWN_DURATION = '5m'
+npm run test:perf:users
+```
+
+Replace the example staging URL before running. Runs above 100 users require
+`ALLOW_HIGH_LOAD=1`. A local run can be limited by the computer running k6 and
+the backend, so reaching 30,000 users locally does not establish that the
+deployed service supports that load. Check that k6's `vus max` reaches the target
+and that all thresholds pass. Results for browser performance runs are saved
+under `frontend/performance/results/`.
+
+See [`PERFORMANCE_TESTING.md`](PERFORMANCE_TESTING.md) for configuration
+options, thresholds, mock modes, and additional details.
+
 ## Notes
 
 - Backend default port is `3000` (as logged by the server).
@@ -214,4 +338,4 @@ The backend listens on port `3000` by default and exposes the frontend-facing ro
 ## Known Problems
 
 - **The `npm run dev` helper is platform-specific.** The root script calls `dev.sh`, which requires Bash and `tmux`; it will not run in ordinary Windows PowerShell. Use `npm start`, or run `npm run backend` and `npm run frontend` in separate terminals.
-- **Automated verification is limited.** The root, backend, and current frontend package scripts do not define an end-to-end or backend test suite, so the live WordPress, event, WebView, and VolunteerHub paths require manual testing when integrations change.
+- **Device end-to-end coverage is limited.** The automated suites cover backend routes and frontend components, and the performance tests cover the Expo web build and backend API load. They do not measure native iOS or Android startup and rendering; live third-party integrations still require valid credentials and should be checked when those integrations change.

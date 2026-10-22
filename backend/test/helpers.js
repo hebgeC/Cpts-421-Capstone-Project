@@ -5,12 +5,14 @@ import nock from 'nock';
 // Each test file runs in its own process. Never use real credentials or services.
 export function isolateExternalServices() {
   const originalKey = process.env.VOLUNTEERHUB_API_KEY;
+  const originalWpBase = process.env.WP_API_BASE_URL;
   before(() => {
     nock.disableNetConnect();
     nock.enableNetConnect(host => /^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(host));
   });
   beforeEach(() => {
     delete process.env.VOLUNTEERHUB_API_KEY;
+    delete process.env.WP_API_BASE_URL;
     mock.method(console, 'error', () => {});
   });
   afterEach(() => {
@@ -23,6 +25,8 @@ export function isolateExternalServices() {
     nock.enableNetConnect();
     if (originalKey === undefined) delete process.env.VOLUNTEERHUB_API_KEY;
     else process.env.VOLUNTEERHUB_API_KEY = originalKey;
+    if (originalWpBase === undefined) delete process.env.WP_API_BASE_URL;
+    else process.env.WP_API_BASE_URL = originalWpBase;
   });
 }
 

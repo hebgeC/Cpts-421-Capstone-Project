@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import nock from 'nock';
 import request from 'supertest';
 import app from '../app.js';
 import { SITE_PAGES } from '../config/siteMap.js';
@@ -8,6 +9,15 @@ import { isolateExternalServices, wp, postFixture, mappedPost } from './helpers.
 isolateExternalServices();
 const postsPath = '/wp-json/wp/v2/posts';
 const pagesPath = '/wp-json/wp/v2/pages';
+
+test('GET /wpArticles uses the configured WordPress upstream', async () => {
+  process.env.WP_API_BASE_URL = 'https://performance-upstream.example/wp-json/wp/v2/';
+  nock('https://performance-upstream.example')
+    .get(postsPath).query({ categories: 1, per_page: 20, page: 1, _embed: true })
+    .reply(200, [postFixture()]);
+  const res = await request(app).get('/wpArticles').expect(200);
+  assert.deepEqual(res.body, { articles: [mappedPost], totalPages: 1 });
+});
 
 test('GET /wpUpdates requests updates and maps all post fields', async () => {
   wp().get(postsPath).query({ categories: 14, per_page: 20, _embed: true })

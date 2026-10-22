@@ -16,4 +16,9 @@ function getDevHost() {
 // TODO: replace with the real Railway URL once the backend is deployed (see plan).
 const PRODUCTION_API_URL = 'https://REPLACE-WITH-YOUR-RAILWAY-URL.up.railway.app';
 
-export const API_BASE_URL = __DEV__ ? `http://${getDevHost()}:3000` : PRODUCTION_API_URL;
+// Expo inlines this public setting into web and native builds. Use a reachable
+// staging API when measuring a production web export.
+const configuredApiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+export const API_BASE_URL = configuredApiUrl
+  ? configuredApiUrl.replace(/\/+$/, '')
+  : __DEV__ ? `http://${getDevHost()}:3000` : PRODUCTION_API_URL;
