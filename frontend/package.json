@@ -7,7 +7,12 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "publish:ios": "eas build --platform ios --profile production --non-interactive --auto-submit"
+    "publish:ios": "eas build --platform ios --profile production --non-interactive --auto-submit",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --runInBand --coverage",
+    "test:perf:page": "playwright test page-load.spec.js",
+    "test:perf:calendar": "playwright test calendar-load.spec.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -37,8 +42,14 @@
     "@babel/core": "^7.25.2",
     "@react-native-community/cli": "^20.2.0",
     "@react-native/metro-config": "^0.81.5",
+    "@playwright/test": "^1.64.1",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.18",
+    "react-test-renderer": "19.1.0",
     "typescript": "^5.3.3"
   }
 }

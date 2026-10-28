@@ -11,7 +11,7 @@ export default function WebViewScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity accessibilityLabel="Go back" onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
           <Icon name="chevron-back" size={22} color="#2C1810" />
         </TouchableOpacity>
         <Text style={styles.title} numberOfLines={1}>{params?.title ?? ''}</Text>

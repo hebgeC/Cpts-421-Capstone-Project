@@ -28,6 +28,7 @@ export default function CalendarView() {
 
     // events state
     const [events, setEvents] = useState([]);
+    const [eventsLoading, setEventsLoading] = useState(true);
 
     // event details
     const [detailsTitle, setDetailsTitle] = useState("title");
@@ -59,6 +60,7 @@ export default function CalendarView() {
     };
 
     const fetchEventsForMonth = async (month, year) => {
+        setEventsLoading(true);
         console.log(`fetching events for ${MONTHS[month]} ${year}`);
         const lastDay = new Date(year, month + 1, 0).getDate();
         const earliestTime = new Date(year, month, 1, 0, 0).toISOString();
@@ -73,29 +75,32 @@ export default function CalendarView() {
                 .catch(() => [])
         );
 
-        const results = await Promise.all(requests);
-        
-        setEvents(results.flat());
-
-        // check if there are more than 10 pages worht of events (50 events per page)
-        if (results[MAX_PAGES - 1].length === 50)
-        {
-            let page = MAX_PAGES + 1;
-            // need to keep fetching events
-            while (page < HARD_PAGES_CAP)
-            {
-                let data = (await axios.get(`${API_BASE_URL}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)).data;
-                results.push(data);
-
-                if (data.length < 50)
-                {
-                    break;
-                }
-
-                ++page;
-            }
+        try {
+            const results = await Promise.all(requests);
 
             setEvents(results.flat());
+
+            // Check whether there are more than 10 pages of events (50 per page).
+            if (results[MAX_PAGES - 1].length === 50)
+            {
+                let page = MAX_PAGES + 1;
+                while (page < HARD_PAGES_CAP)
+                {
+                    let data = (await axios.get(`${API_BASE_URL}/volunteerShiftEvent/${page}/${earliestTime}/${latestTime}`)).data;
+                    results.push(data);
+
+                    if (data.length < 50)
+                    {
+                        break;
+                    }
+
+                    ++page;
+                }
+
+                setEvents(results.flat());
+            }
+        } finally {
+            setEventsLoading(false);
         }
     }
 
@@ -205,7 +210,7 @@ export default function CalendarView() {
     );
 
     return (
-        <View style={styles.container}>
+        <View style={styles.container} testID={eventsLoading ? undefined : "calendar-ready"}>
             {/* ── Modals ── */}
             <MonthYearPicker
                 visible={pickerVisible}
@@ -230,7 +235,7 @@ export default function CalendarView() {
             <View style={styles.gridSection}>
             {/* ── Month navigation header ── */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+                <TouchableOpacity accessibilityLabel="Previous month" onPress={prevMonth} style={styles.navBtn}>
                     <Text style={styles.navArrow}>‹</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={openPicker} style={styles.monthYearBtn}>
@@ -239,7 +244,7 @@ export default function CalendarView() {
                     </Text>
                     <Text style={styles.monthYearCaret}>▾</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+                <TouchableOpacity accessibilityLabel="Next month" onPress={nextMonth} style={styles.navBtn}>
                     <Text style={styles.navArrow}>›</Text>
                 </TouchableOpacity>
             </View>

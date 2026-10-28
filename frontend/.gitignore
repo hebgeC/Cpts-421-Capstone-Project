@@ -8,4 +8,6 @@ android/.gradle/
 *.keystore
 .expo/prebuild/
 .expo/*.log
-
+coverage/
+test-results.json
+test-run.log

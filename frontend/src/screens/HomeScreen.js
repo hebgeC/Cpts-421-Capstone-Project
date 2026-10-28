@@ -64,7 +64,7 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {!loading && error && (
-          <View style={styles.errorBox}>
+          <View testID="home-error" style={styles.errorBox}>
             <Icon name="wifi-outline" size={24} color="#C0392B" />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryBtn} onPress={load}>
@@ -74,7 +74,7 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {!loading && !error && (
-          <>
+          <View testID="home-ready">
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Featured Story</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
@@ -177,7 +177,7 @@ export default function HomeScreen({ navigation }) {
                 ))}
               </>
             )}
-          </>
+          </View>
         )}
 
         <View style={{ height: 20 }} />

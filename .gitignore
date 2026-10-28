@@ -6,3 +6,9 @@ android/.gradle/
 .env
 *.keystore
 .DS_Store
+backend/coverage/
+backend/performance/results/
+frontend/performance/results/
+frontend/playwright-report/
+frontend/test-results/
+frontend/dist/
