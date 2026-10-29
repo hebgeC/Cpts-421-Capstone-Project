@@ -10,6 +10,18 @@ jest.unmock('@react-navigation/native');
 
 beforeEach(() => mockApi());
 
+test('Donate tab uses a heart icon and opens the donation page in-app', async () => {
+  render(<App />);
+  expect(await screen.findByText('heart-outline')).toBeOnTheScreen();
+
+  fireEvent.press(screen.getByText('Donate'));
+
+  await waitFor(() => {
+    expect(screen.getByTestId('native-webview').props.source).toEqual({ uri: 'https://www.trm.org/donate/' });
+  });
+  expect(screen.getByText('heart')).toBeOnTheScreen();
+});
+
 test.each(['android', 'ios'])(
   'App launches without logging in and exposes primary navigation on %s',
   async (platform) => {
@@ -23,7 +35,7 @@ test.each(['android', 'ios'])(
     fireEvent.press(screen.getByText('Events'));
     expect(await screen.findByText('There are no upcoming events.')).toBeOnTheScreen();
     fireEvent.press(screen.getByText('Volunteer'));
-    expect(await screen.findByText('Volunteer Shifts')).toBeOnTheScreen();
+    expect(await screen.findByText('Create Your TRM Volunteer Account')).toBeOnTheScreen();
     fireEvent.press(screen.getByText('Information'));
     expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
   },
@@ -54,8 +66,8 @@ test('Explore → category → PageDetail → save → back → external WebView
   await screen.findByText('Find help here');
   fireEvent.press(screen.getByLabelText('Save resource'));
   fireEvent.press(screen.getByLabelText('Go back'));
-  fireEvent.press(await screen.findByText('Donate'));
-  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://support.trm.org'));
+  fireEvent.press((await screen.findAllByText('Donate'))[0]);
+  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://www.trm.org/donate/'));
   fireEvent.press(screen.getByLabelText('Go back'));
   expect(await screen.findByText('Shelter')).toBeOnTheScreen();
 });
@@ -66,7 +78,10 @@ test('Tab navigation reaches Events, Volunteer and Information; Information open
   fireEvent.press(screen.getByText('Events'));
   await screen.findByText('There are no upcoming events.');
   fireEvent.press(screen.getByText('Volunteer'));
-  await screen.findByText('Volunteer Shifts');
+  fireEvent.press(await screen.findByText('Returning Volunteers'));
+  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://rescue-mission.volunteerhub.com/account/signin?ReturnUrl=%2F'));
+  fireEvent.press(screen.getByLabelText('Go back'));
+  expect(await screen.findByText('Group Volunteering (5 or more people)')).toBeOnTheScreen();
   fireEvent.press(screen.getByText('Information'));
   expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
   expect(screen.getByText('Donation Portal')).toBeOnTheScreen();
@@ -74,7 +89,7 @@ test('Tab navigation reaches Events, Volunteer and Information; Information open
   expect(screen.getByText('About TRM')).toBeOnTheScreen();
   expect(screen.getByText('Help & Support')).toBeOnTheScreen();
   fireEvent.press(await screen.findByText('Donation Portal'));
-  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://support.trm.org'));
+  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://www.trm.org/donate/'));
   fireEvent.press(screen.getByLabelText('Go back'));
   expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
   expect(screen.getByText('Help & Support')).toBeOnTheScreen();

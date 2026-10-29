@@ -12,6 +12,7 @@ import VolunteerScreen from './src/screens/VolunteerScreen';
 import ArticleScreen from './src/screens/ArticleScreen';
 import PageDetailScreen from './src/screens/PageDetailScreen';
 import InformationScreen from './src/screens/ProfileScreen';
+import DonationScreen from './src/screens/DonationScreen';
 import WebViewScreen from './src/screens/WebViewScreen';
 import BookmarksScreen from './src/screens/BookmarksScreen';
 import { SavedResourcesProvider } from './src/context/SavedResourcesContext';
@@ -51,6 +52,7 @@ function MainTabs() {
           else if (route.name === 'Events') iconName = focused ? 'calendar' : 'calendar-outline';
           else if (route.name === 'Volunteer') iconName = focused ? 'hand-left' : 'hand-left-outline';
           else if (route.name === 'Saved') iconName = focused ? 'bookmark' : 'bookmark-outline';
+          else if (route.name === 'Donate') iconName = focused ? 'heart' : 'heart-outline';
           else if (route.name === 'Information') iconName = focused ? 'information-circle' : 'information-circle-outline';
           return <Icon name={iconName} size={22} color={color} />;
         },
@@ -61,6 +63,7 @@ function MainTabs() {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Volunteer" component={VolunteerScreen} />
       <Tab.Screen name="Saved" component={BookmarksScreen} />
+      <Tab.Screen name="Donate" component={DonationScreen} />
       <Tab.Screen name="Information" component={InformationScreen} />
     </Tab.Navigator>
   );

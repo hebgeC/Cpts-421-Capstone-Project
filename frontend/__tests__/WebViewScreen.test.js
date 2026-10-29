@@ -5,7 +5,7 @@ import WebViewScreen from '../src/screens/WebViewScreen';
 import { navigation, route } from '../test/navigation';
 
 test('WebView shows the supplied title, loads the URL, renders a loading indicator and returns', () => {
-  route.params = { title: 'Donation Portal', url: 'https://support.trm.org' };
+  route.params = { title: 'Donation Portal', url: 'https://www.trm.org/donate/' };
   const view = render(<WebViewScreen />);
   expect(screen.getByText('Donation Portal')).toBeOnTheScreen();
   const webview = screen.getByTestId('native-webview');

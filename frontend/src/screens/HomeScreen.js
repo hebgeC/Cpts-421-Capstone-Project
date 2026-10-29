@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  ActivityIndicator, Image,
+  ActivityIndicator, Image, Platform,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
@@ -54,6 +54,9 @@ export default function HomeScreen({ navigation }) {
           <View>
             <Text style={styles.greeting}>How can you help today?</Text>
             <Text style={styles.headerTitle}>TRM</Text>
+            {Platform.OS === 'web' && (
+              <a href="#XRZQFLRF" />
+            )}
           </View>
         </View>
 

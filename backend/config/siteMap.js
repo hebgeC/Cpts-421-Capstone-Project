@@ -38,7 +38,7 @@ const SITE_PAGES = [
   { key: "internship", category: "get-involved", type: "page", slug: "internship", title: "Internships", icon: "school-outline" },
   { key: "community-service", category: "get-involved", type: "page", slug: "communityservice", title: "Community Service", icon: "people-circle-outline" },
   { key: "in-kind-giving", category: "get-involved", type: "page", slug: "inkind", title: "In-Kind Giving", icon: "gift-outline" },
-  { key: "donate", category: "get-involved", type: "external", title: "Donate Online", url: "https://support.trm.org", icon: "heart-outline" },
+  { key: "donate", category: "get-involved", type: "external", title: "Donate Online", url: "https://www.trm.org/donate/", icon: "heart-outline" },
   { key: "careers", category: "get-involved", type: "external", title: "Careers", url: "https://recruiting.paylocity.com/Recruiting/Jobs/All/763a0f6c-e7b2-46b4-80c0-70c038675ea0/The-Rescue-Mission", icon: "briefcase-outline" },
 
   // Contact

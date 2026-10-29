@@ -15,7 +15,7 @@ test('Information presents its heading, helper text and all four resource links'
 });
 
 test.each([
-  ['Donation Portal', 'https://support.trm.org'],
+  ['Donation Portal', 'https://www.trm.org/donate/'],
   ['In-Kind Giving', 'https://www.trm.org/inkind/'],
   ['About TRM', 'https://www.trm.org/about/'],
   ['Help & Support', 'https://www.trm.org/contact/'],

@@ -6,7 +6,7 @@ import {
 import { Ionicons as Icon } from '@expo/vector-icons';
 
 const RESOURCES = [
-  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B', url: 'https://support.trm.org' },
+  { icon: 'heart-outline', label: 'Donation Portal', color: '#C0392B', url: 'https://www.trm.org/donate/' },
   { icon: 'gift-outline', label: 'In-Kind Giving', color: '#27AE60', url: 'https://www.trm.org/inkind/' },
   { icon: 'people-outline', label: 'About TRM', color: '#8B6B5A', url: 'https://www.trm.org/about/' },
   { icon: 'help-circle-outline', label: 'Help & Support', color: '#E67E22', url: 'https://www.trm.org/contact/' },

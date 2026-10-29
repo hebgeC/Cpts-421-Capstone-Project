@@ -39,7 +39,7 @@ test('Explore opens and saves internal pages and external resources', async () =
   expect(navigation.navigate).toHaveBeenLastCalledWith('PageDetail', { slug: 'emergency-services', title: 'Shelter' });
   fireEvent.press(screen.getAllByLabelText('Save resource')[0]);
   fireEvent.press(screen.getByText('Donate'));
-  expect(navigation.navigate).toHaveBeenLastCalledWith('WebView', { url: 'https://support.trm.org', title: 'Donate' });
+  expect(navigation.navigate).toHaveBeenLastCalledWith('WebView', { url: 'https://www.trm.org/donate/', title: 'Donate' });
   fireEvent.press(screen.getByLabelText('Save resource'));
   expect(screen.getAllByLabelText('Remove from saved resources')).toHaveLength(2);
 });

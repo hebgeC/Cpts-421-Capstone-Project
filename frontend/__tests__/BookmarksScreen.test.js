@@ -15,7 +15,7 @@ test('Bookmarks restores all resource types and opens the correct destinations',
   const resources = [
     { ...article, resourceType: 'article', savedKey: 'article:articles:11' },
     { resourceType: 'page', savedKey: 'page:help', slug: 'help', title: 'Help page' },
-    { resourceType: 'external', savedKey: 'external:donate', url: 'https://support.trm.org', title: 'Donate' },
+    { resourceType: 'external', savedKey: 'external:donate', url: 'https://www.trm.org/donate/', title: 'Donate' },
   ];
   SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(resources));
   renderSaved(<BookmarksScreen navigation={navigation} />);
@@ -25,7 +25,7 @@ test('Bookmarks restores all resource types and opens the correct destinations',
   fireEvent.press(screen.getByText('Help page'));
   expect(navigation.navigate).toHaveBeenLastCalledWith('PageDetail', { slug: 'help', title: 'Help page' });
   fireEvent.press(screen.getByText('Donate'));
-  expect(navigation.navigate).toHaveBeenLastCalledWith('WebView', { url: 'https://support.trm.org', title: 'Donate' });
+  expect(navigation.navigate).toHaveBeenLastCalledWith('WebView', { url: 'https://www.trm.org/donate/', title: 'Donate' });
 });
 
 test('Bookmarks removes a restored resource and persists the empty collection', async () => {

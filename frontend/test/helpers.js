@@ -11,7 +11,7 @@ export const siteMap = {
   categories: [{ key: 'help', title: 'Get Help', icon: 'heart', bg: '#FFFFFF', color: '#C0392B' }],
   items: [
     { key: 'shelter', category: 'help', type: 'page', slug: 'emergency-services', title: 'Shelter', icon: 'home' },
-    { key: 'donate', category: 'help', type: 'external', url: 'https://support.trm.org', title: 'Donate', icon: 'heart' },
+    { key: 'donate', category: 'help', type: 'external', url: 'https://www.trm.org/donate/', title: 'Donate', icon: 'heart' },
   ],
 };
 export function response(data, ok = true) {
