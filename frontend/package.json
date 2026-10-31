@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
-    "@react-native-community/netinfo": "11.4.1",
     "@react-native-cookies/cookies": "^6.2.1",
     "@react-navigation/bottom-tabs": "^7.15.9",
     "@react-navigation/native": "^7.2.2",

@@ -8,7 +8,6 @@ import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
 import { SavedResourcesContext } from '../context/SavedResourcesContext';
-import useIsConnected from '../hooks/useIsConnected';
 
 const SHELTER_PHONE = '2533834493';
 
@@ -26,7 +25,6 @@ export default function PageDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
-  const isConnected = useIsConnected();
   const pageResource = {
     resourceType: 'page',
     slug,
@@ -35,11 +33,6 @@ export default function PageDetailScreen() {
   };
 
   const load = useCallback(async () => {
-    if (isConnected === false) {
-      setError("You're offline. This content needs an internet connection.");
-      setLoading(false);
-      return;
-    }
     try {
       setError(null);
       setLoading(true);
@@ -52,7 +45,7 @@ export default function PageDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [slug, isConnected]);
+  }, [slug]);
 
   useEffect(() => { load(); }, [load]);
 

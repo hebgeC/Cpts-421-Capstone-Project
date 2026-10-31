@@ -8,7 +8,6 @@ import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
 import MonthYearPicker from '../components/MonthYearPicker';
 import CalendarDatePicker from '../components/CalendarDatePicker';
-import useIsConnected from '../hooks/useIsConnected';
 
 const MONTH_MAP = {
   '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr',
@@ -110,15 +109,9 @@ export default function EventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const fetchRequestId = useRef(0);
-  const isConnected = useIsConnected();
 
   const fetchEvents = useCallback(async () => {
     const requestId = ++fetchRequestId.current;
-    if (isConnected === false) {
-      setError("You're offline. This content needs an internet connection.");
-      setLoading(false);
-      return;
-    }
     try {
       setError(null);
       setLoading(true);
@@ -164,7 +157,7 @@ export default function EventsScreen() {
         setRefreshing(false);
       }
     }
-  }, [dateFilter, selectedDay, selectedMonth, isConnected]);
+  }, [dateFilter, selectedDay, selectedMonth]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 

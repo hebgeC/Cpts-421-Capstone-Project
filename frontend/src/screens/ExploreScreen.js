@@ -6,7 +6,6 @@ import {
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { API_BASE_URL } from '../utils/api';
 import { SavedResourcesContext } from '../context/SavedResourcesContext';
-import useIsConnected from '../hooks/useIsConnected';
 
 const RESOURCE_PAGE_SIZE = 10;
 
@@ -32,7 +31,6 @@ export default function ExploreScreen({ navigation }) {
   const [error, setError] = useState(null);
   const requestId = useRef(0);
   const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
-  const isConnected = useIsConnected();
 
   const fetchResourcePage = useCallback(async (section, pageNumber) => {
     const kind = section === 'articles' || section === 'updates'
@@ -47,11 +45,6 @@ export default function ExploreScreen({ navigation }) {
 
   const load = useCallback(async () => {
     const currentRequest = ++requestId.current;
-    if (isConnected === false) {
-      setError("You're offline. This content needs an internet connection.");
-      setLoading(false);
-      return;
-    }
     try {
       setError(null);
       setLoading(true);
@@ -73,7 +66,7 @@ export default function ExploreScreen({ navigation }) {
     } finally {
       if (currentRequest === requestId.current) setLoading(false);
     }
-  }, [activeSection, fetchResourcePage, isConnected]);
+  }, [activeSection, fetchResourcePage]);
 
   useEffect(() => { load(); }, [load]);
 
