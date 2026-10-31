@@ -28,12 +28,19 @@ No backend, credentials, emulator, device, or running Metro server is required.
 | Home | `__tests__/HomeScreen.test.js` | 3 | Featured/recent stories and updates; opening each resource; See all; empty stories; ignoring untitled updates; failed fetch and Retry recovery. |
 | Explore | `__tests__/ExploreScreen.test.js` | 8 | Opening articles; saving/removing bookmarks; Articles/Updates category filters and clearing a category; internal-page and external-link destinations and bookmarks; scroll pagination with deduplication; failed next-page fetch with retry; failed initial load and Retry; empty resources/category; ignoring stale responses after changing categories. |
 | Events | `__tests__/EventsScreen.test.js` | 9 | Initial loading; upcoming/past events and formatted times, price, location and description; opening event/source links; case-insensitive title/venue search and no matches; real day/month picker selections and cancellation; returning to List; empty list and pull-to-refresh; network/HTTP errors and Retry; ignoring stale requests after switching filters. |
-| Volunteer | `__tests__/VolunteerScreen.test.js` | 8 | Fetching paginated calendar data; selecting/toggling days; empty days and failed requests; shift details and HTML description; excluding deleted registrations from slot counts; clamping overbooked slots to zero; missing registration groups; closing details; Sign Up routing to VolunteerHub; month picker confirmation/cancel; December/January navigation. |
+| Volunteer | `__tests__/VolunteerScreen.test.js` | 5 | Displays the three volunteer options; opens each option's configured destination; uses the selected WordPress image URLs. |
 | Saved / Bookmarks | `__tests__/BookmarksScreen.test.js` | 6 | Empty collection; restoring articles/pages/external resources; routing each resource type; removing a resource and persisting the result; malformed/non-array saved data; storage read failure. |
 | Information (file: `ProfileScreen.jsx`) | `__tests__/InformationScreen.test.js` | 4 | Donation Portal, In-Kind Giving, About TRM, and Help & Support each open WebView with the correct title and URL. |
 | Article | `__tests__/ArticleScreen.test.js` | 6 | Loading full HTML content; saving/removing; opening the source and going back; supplied HTML avoids a fetch; update category and author; excerpt fallback for network/HTTP errors; missing id/title/source; storage write failure leaves saving usable for the current session. |
 | Page Detail | `__tests__/PageDetailScreen.test.js` | 5 | Page content and modified date; saving/removing; emergency shelter phone shortcut; source link and back; HTML web links route to WebView, telephone/email links use the OS; network/HTTP failure and Retry; non-emergency pages omit the phone shortcut. |
 | WebView | `__tests__/WebViewScreen.test.js` | 2 | Route title and URL passed to native WebView; loading indicator; back navigation; missing route parameters. |
+
+**Deprecated Volunteer calendar coverage:** Older tests for shift loading,
+date selection, shift details, availability, and volunteer calendar month
+navigation describe a former version of the Volunteer screen. They are no longer
+present in `VolunteerScreen.test.js`; its current tests cover the volunteer
+signup and group opportunity cards. Historical traceability entries for the old
+calendar behavior are marked DEPRECATED in `TEST_TRACEABILITY.md`.
 
 Additional integration coverage:
 
@@ -46,7 +53,9 @@ Additional integration coverage:
   month/year navigation and rollover, Today, missing initial date, reopening with
   a new value, Cancel, and hardware dismissal.
 
-**Verified: 60 passing tests in 11 suites.**
+**Historical verification:** 60 passing tests in 11 suites were recorded before
+the Volunteer calendar was removed. This count includes deprecated calendar
+coverage and does not describe the current suite.
 
 ## Run the tests
 
@@ -90,14 +99,14 @@ verify writes and restoration. Linking is a spy so tests never open a browser
 or place a telephone call.
 
 Native WebView and icons are lightweight mocks, and safe-area/native platform
-APIs use their test mocks. Screen components, calendars, pickers, HTML rendering,
-and saved-resource state run as real code. Back/calendar/date buttons gained
+APIs use their test mocks. Screen components, event date pickers, HTML rendering,
+and saved-resource state run as real code. Back and date buttons gained
 accessibility labels so tests can select the intended controls reliably.
 
 These are JavaScript component/integration tests, not device end-to-end or
 visual tests. WebView tests verify the URL/loading/back contract, not the
 contents, cookies, redirects, or submissions on the remote website. Volunteer
-Sign Up tests verify navigation without registering a real volunteer. Device
+option tests verify navigation without registering a real volunteer. Device
 checks are still needed for native rendering, touch/keyboard behavior, external
 OS actions, and the remote signup experience.
 

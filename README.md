@@ -159,7 +159,12 @@ This runs 20 cold browser loads and checks that p95 is at most 3 seconds. The
 test records its result in
 `frontend/performance/results/page-load.json`.
 
-### Measure Volunteer calendar load time
+### Deprecated: Measure Volunteer calendar load time
+
+This legacy performance test measures the former Volunteer shift calendar. The
+current Volunteer screen links to VolunteerHub and group opportunities, so this
+test does not measure the current screen. Its test file and npm script remain as
+deprecated artifacts and are not part of current performance verification.
 
 From the repository root:
 
