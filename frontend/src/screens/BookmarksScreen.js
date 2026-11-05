@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React, { useContext } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
@@ -41,7 +42,7 @@ export default function BookmarksScreen({ navigation }) {
 
         {savedResources.length === 0 ? (
           <View style={styles.emptyState}>
-            <Icon name="bookmark-outline" size={34} color="#C0392B" />
+            <Icon name="bookmark-outline" size={34} color={colors.primary} />
             <Text style={styles.emptyTitle}>No saved resources yet</Text>
             <Text style={styles.emptyText}>Use the bookmark icon on a resource to add it here.</Text>
           </View>
@@ -49,7 +50,7 @@ export default function BookmarksScreen({ navigation }) {
           <View style={styles.collectionCard}>
             <View style={styles.collectionHeader}>
               <Text style={styles.collectionTitle}>My Resources</Text>
-              <Icon name="folder-outline" size={18} color="#C0392B" />
+              <Icon name="folder-outline" size={18} color={colors.primary} />
             </View>
             {savedResources.map((resource, i) => (
               <View
@@ -65,7 +66,7 @@ export default function BookmarksScreen({ navigation }) {
                     <Icon
                       name={resource.icon || (resource.resourceType === 'external' ? 'open-outline' : 'document-text-outline')}
                       size={22}
-                      color="#C0392B"
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.bookmarkInfo}>
@@ -73,19 +74,19 @@ export default function BookmarksScreen({ navigation }) {
                     <Text style={styles.bookmarkTitle} numberOfLines={2}>{resource.title}</Text>
                     {resource.date ? (
                       <View style={styles.bookmarkMeta}>
-                        <Icon name="time-outline" size={12} color="#AAAAAA" />
+                        <Icon name="time-outline" size={12} color={colors.muted} />
                         <Text style={styles.bookmarkMetaText}>{formatDate(resource.date)}</Text>
                       </View>
                     ) : null}
                   </View>
-                  <Icon name="chevron-forward" size={16} color="#CCCCCC" />
+                  <Icon name="chevron-forward" size={16} color={colors.muted} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.removeButton}
                   onPress={() => removeSaved(resource)}
                   accessibilityLabel={`Remove ${resource.title} from saved resources`}
                 >
-                  <Icon name="trash-outline" size={19} color="#C0392B" />
+                  <Icon name="trash-outline" size={19} color={colors.primary} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -93,7 +94,7 @@ export default function BookmarksScreen({ navigation }) {
         )}
 
         <View style={styles.tipBox}>
-          <Icon name="information-circle-outline" size={18} color="#8B6B5A" />
+          <Icon name="information-circle-outline" size={18} color={colors.muted} />
           <Text style={styles.tipText}>Saved resources are stored locally on your device.</Text>
         </View>
       </ScrollView>
@@ -102,13 +103,13 @@ export default function BookmarksScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FDF6F0' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#2C1810', letterSpacing: -0.5 },
-  headerSub: { fontSize: 14, color: '#8B6B5A', marginTop: 2 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: colors.ink, letterSpacing: -0.5 },
+  headerSub: { fontSize: 14, color: colors.muted, marginTop: 2 },
   emptyState: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 64, gap: 8 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#2C1810', marginTop: 6 },
-  emptyText: { fontSize: 13, color: '#8B6B5A', lineHeight: 19, textAlign: 'center' },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.ink, marginTop: 6 },
+  emptyText: { fontSize: 13, color: colors.muted, lineHeight: 19, textAlign: 'center' },
   collectionCard: {
     backgroundColor: '#FFFFFF', marginHorizontal: 20, borderRadius: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
@@ -116,21 +117,21 @@ const styles = StyleSheet.create({
   },
   collectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    padding: 16, backgroundColor: '#FEF0EE',
+    padding: 16, backgroundColor: colors.primarySoft,
   },
-  collectionTitle: { fontSize: 14, fontWeight: '700', color: '#C0392B' },
+  collectionTitle: { fontSize: 14, fontWeight: '700', color: colors.primary },
   bookmarkItem: { flexDirection: 'row', alignItems: 'center' },
-  bookmarkItemBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
+  bookmarkItemBorder: { borderBottomWidth: 1, borderBottomColor: colors.background },
   bookmarkMain: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
   bookmarkIcon: {
-    width: 48, height: 48, borderRadius: 14, backgroundColor: '#FDF6F0',
+    width: 48, height: 48, borderRadius: 14, backgroundColor: colors.background,
     alignItems: 'center', justifyContent: 'center',
   },
   bookmarkInfo: { flex: 1 },
-  bookmarkCategory: { fontSize: 11, color: '#C0392B', fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 3 },
-  bookmarkTitle: { fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 5 },
+  bookmarkCategory: { fontSize: 11, color: colors.primary, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 3 },
+  bookmarkTitle: { fontSize: 14, fontWeight: '700', color: colors.ink, lineHeight: 20, marginBottom: 5 },
   bookmarkMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  bookmarkMetaText: { fontSize: 12, color: '#AAAAAA' },
+  bookmarkMetaText: { fontSize: 12, color: colors.muted },
   removeButton: { paddingHorizontal: 16, paddingVertical: 24 },
   tipBox: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -138,5 +139,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF', borderRadius: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
   },
-  tipText: { fontSize: 13, color: '#8B6B5A', flex: 1 },
+  tipText: { fontSize: 13, color: colors.muted, flex: 1 },
 });

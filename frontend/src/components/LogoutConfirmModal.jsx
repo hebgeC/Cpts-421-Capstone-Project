@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 
@@ -45,12 +46,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#2C1810',
+    color: colors.ink,
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#8B6B5A',
+    color: colors.muted,
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -63,19 +64,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
     alignItems: 'center',
   },
   cancelText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#8B6B5A',
+    color: colors.muted,
   },
   confirmBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#C0392B',
+    backgroundColor: colors.primary,
     alignItems: 'center',
   },
   confirmText: {

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import { colors } from '../theme/colors';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
   ActivityIndicator, Linking, useWindowDimensions,
@@ -6,8 +7,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import { API_BASE_URL } from '../utils/api';
-import { SavedResourcesContext } from '../context/SavedResourcesContext';
+import { getPageBySlug } from '../services/wordpress';
 
 const SHELTER_PHONE = '2533834493';
 
@@ -24,21 +24,12 @@ export default function PageDetailScreen() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
-  const pageResource = {
-    resourceType: 'page',
-    slug,
-    title: data?.title || title || 'Resource',
-    link: data?.link,
-  };
 
   const load = useCallback(async () => {
     try {
       setError(null);
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/wpPage/${slug}`);
-      if (!response.ok) throw new Error('Request failed');
-      const json = await response.json();
+      const json = await getPageBySlug(slug);
       setData(json);
     } catch (e) {
       setError('Could not load this page. Please check your connection.');
@@ -61,27 +52,20 @@ export default function PageDetailScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
         <TouchableOpacity accessibilityLabel="Go back" style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={20} color="#2C1810" />
+          <Icon name="arrow-back" size={20} color={colors.ink} />
         </TouchableOpacity>
         <Text style={styles.topBarTitle} numberOfLines={1}>{title || data?.title || ''}</Text>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => toggleSaved(pageResource)}
-          accessibilityLabel={isSaved(pageResource) ? 'Remove from saved resources' : 'Save resource'}
-        >
-          <Icon name={isSaved(pageResource) ? 'bookmark' : 'bookmark-outline'} size={20} color="#C0392B" />
-        </TouchableOpacity>
       </View>
 
       {loading && (
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color="#C0392B" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
 
       {!loading && error && (
         <View style={styles.errorBox}>
-          <Icon name="wifi-outline" size={24} color="#C0392B" />
+          <Icon name="wifi-outline" size={24} color={colors.primary} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={load}>
             <Text style={styles.retryBtnText}>Retry</Text>
@@ -102,7 +86,7 @@ export default function PageDetailScreen() {
               onPress={() => Linking.openURL(`tel:${SHELTER_PHONE}`)}
               activeOpacity={0.85}
             >
-              <Icon name="call-outline" size={18} color="#C0392B" />
+              <Icon name="call-outline" size={18} color={colors.primary} />
               <Text style={styles.callText}>253-383-4493</Text>
             </TouchableOpacity>
           ) : null}
@@ -135,28 +119,28 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 12, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1, borderBottomColor: colors.warm,
     backgroundColor: '#FFFFFF',
   },
   backBtn: { width: 36, padding: 8, alignItems: 'center' },
-  topBarTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: '#2C1810', textAlign: 'center' },
+  topBarTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.ink, textAlign: 'center' },
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
   errorBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, gap: 12 },
-  errorText: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 },
-  retryBtn: { backgroundColor: '#C0392B', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 },
+  errorText: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
+  retryBtn: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 },
   retryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   scrollContent: { padding: 20 },
-  title: { fontSize: 24, fontWeight: '800', color: '#2C1810', marginBottom: 4 },
-  updated: { fontSize: 12, color: '#AAAAAA', marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.ink, marginBottom: 4 },
+  updated: { fontSize: 12, color: colors.muted, marginBottom: 16 },
   callCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FDECEA', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    backgroundColor: colors.primarySoft, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
     marginBottom: 20, alignSelf: 'flex-start',
   },
-  callText: { fontSize: 15, fontWeight: '700', color: '#C0392B' },
-  bodyText: { fontSize: 15, color: '#4A3728', lineHeight: 25 },
+  callText: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  bodyText: { fontSize: 15, color: colors.ink, lineHeight: 25 },
   linkBtn: {
-    marginTop: 20, backgroundColor: '#C0392B', borderRadius: 14, paddingVertical: 14,
+    marginTop: 20, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   linkBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },

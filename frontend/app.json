@@ -14,11 +14,11 @@
       "package": "com.tacomarescuemission",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FDF6F0"
+        "backgroundColor": "#F7F6F2"
       }
     },
     "splash": {
-      "backgroundColor": "#FDF6F0"
+      "backgroundColor": "#F7F6F2"
     },
     "plugins": [
       "expo-web-browser",

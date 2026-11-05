@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react-native';
 import { Linking, RefreshControl } from 'react-native';
 import EventsScreen from '../src/screens/EventsScreen';
-import { mockApi, response } from '../test/helpers';
+import { mockApi, response, tribeEvent } from '../test/helpers';
 
 const fundraiser = { id: 1, title: 'Community Dinner', startDate: '2026-10-15 15:00:00', endDate: '2026-10-15 18:00:00', venue: 'Tacoma Hall', url: 'https://www.trm.org/dinner/', cost: '$10', description: 'Meet your neighbors', address: '425 South Tacoma Way' };
 const past = { id: 2, title: 'Summer Drive', startDate: '2026-08-01 09:00:00', url: 'https://www.trm.org/drive/' };
@@ -153,8 +153,8 @@ test('Events discards a slow stale list response after selecting a day', async (
   fireEvent.press(screen.getByText('Done'));
   await screen.findByText(fundraiser.title);
   await act(async () => {
-    finishUpcoming(response({ events: [{ ...fundraiser, title: 'Stale dinner' }] }));
-    finishPast(response({ events: [past] }));
+    finishUpcoming(response({ events: [tribeEvent({ ...fundraiser, title: 'Stale dinner' })] }));
+    finishPast(response({ events: [tribeEvent(past)] }));
   });
   expect(screen.queryByText('Stale dinner')).toBeNull();
   expect(screen.getByText(fundraiser.title)).toBeOnTheScreen();

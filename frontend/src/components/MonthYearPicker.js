@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import {
     Text,
     View,
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     pickerTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#2C1810",
+        color: colors.ink,
         textAlign: "center",
         marginBottom: 14,
     },
@@ -197,11 +198,11 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
     },
     pickerItemActive: {
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
     },
     pickerItemText: {
         fontSize: 15,
-        color: "#2C1810",
+        color: colors.ink,
     },
     pickerItemTextActive: {
         color: "#fff",
@@ -219,15 +220,15 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     pickerBtnCancel: {
-        backgroundColor: "#EBEBEB",
+        backgroundColor: colors.border,
     },
     pickerBtnCancelText: {
         fontSize: 14,
-        color: "#8B6B5A",
+        color: colors.muted,
         fontWeight: "600",
     },
     pickerBtnConfirm: {
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
     },
     pickerBtnConfirmText: {
         fontSize: 14,

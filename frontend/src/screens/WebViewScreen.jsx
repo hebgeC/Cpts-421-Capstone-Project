@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -12,7 +13,7 @@ export default function WebViewScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity accessibilityLabel="Go back" onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
-          <Icon name="chevron-back" size={22} color="#2C1810" />
+          <Icon name="chevron-back" size={22} color={colors.ink} />
         </TouchableOpacity>
         <Text style={styles.title} numberOfLines={1}>{params?.title ?? ''}</Text>
         <View style={styles.backBtn} />
@@ -22,7 +23,7 @@ export default function WebViewScreen() {
         startInLoadingState
         renderLoading={() => (
           <View style={styles.loader}>
-            <ActivityIndicator size="large" color="#C0392B" />
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         )}
       />
@@ -31,17 +32,17 @@ export default function WebViewScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FDF6F0' },
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.warm,
     backgroundColor: '#FFFFFF',
   },
   backBtn: { width: 36, alignItems: 'center' },
-  title: { flex: 1, fontSize: 16, fontWeight: '700', color: '#2C1810', textAlign: 'center' },
+  title: { flex: 1, fontSize: 16, fontWeight: '700', color: colors.ink, textAlign: 'center' },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

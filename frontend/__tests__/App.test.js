@@ -10,107 +10,62 @@ jest.unmock('@react-navigation/native');
 
 beforeEach(() => mockApi());
 
-test('Donate tab uses a heart icon and opens the donation page in-app', async () => {
+test('Donate tab opens the giving form in the app WebView', async () => {
   render(<App />);
   expect(await screen.findByText('heart-outline')).toBeOnTheScreen();
-
   fireEvent.press(screen.getByText('Donate'));
-
+  fireEvent.press(screen.getByRole('button', { name: 'Donate Here' }));
   await waitFor(() => {
-    expect(screen.getByTestId('native-webview').props.source).toEqual({ uri: 'https://www.trm.org/donate/' });
+    expect(screen.getByTestId('native-webview').props.source).toEqual({ uri: 'https://www.trm.org/donate/?form=FUNHYQKHUSS' });
   });
-  expect(screen.getByText('heart')).toBeOnTheScreen();
+  expect(screen.getByText('Donate Here')).toBeOnTheScreen();
 });
 
 test.each(['android', 'ios'])(
-  'App launches without logging in and exposes primary navigation on %s',
+  'App launches and exposes primary navigation on %s without Saved',
   async (platform) => {
     jest.replaceProperty(Platform, 'OS', platform);
     render(<App />);
-
-    expect(await screen.findByText('How can you help today?')).toBeOnTheScreen();
+    expect(await screen.findByText('Stories & news')).toBeOnTheScreen();
     expect(screen.getByText(article.title)).toBeOnTheScreen();
-    expect(screen.queryByText('Welcome back')).toBeNull();
+    expect(screen.queryByText('Saved')).toBeNull();
+    expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
 
     fireEvent.press(screen.getByText('Events'));
     expect(await screen.findByText('There are no upcoming events.')).toBeOnTheScreen();
     fireEvent.press(screen.getByText('Volunteer'));
     expect(await screen.findByText('Create Your TRM Volunteer Account')).toBeOnTheScreen();
-    fireEvent.press(screen.getByText('Information'));
-    expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Explore'));
+    expect(await screen.findByText('Stories of hope and change')).toBeOnTheScreen();
+    expect(screen.queryByText('Information')).toBeNull();
   },
 );
 
-test('Home → Article → save → back → Saved → reopen → remove', async () => {
+test('Home opens an article without bookmark navigation or storage', async () => {
   render(<App />);
   fireEvent.press(await screen.findByText(article.title));
   await screen.findByText('Full story content');
-  fireEvent.press(screen.getByLabelText('Save resource'));
-  expect(SecureStore.setItemAsync).toHaveBeenCalledWith('trm.savedResources.v1', expect.stringContaining(article.title));
+  expect(screen.queryByLabelText('Save resource')).toBeNull();
+  expect(screen.queryByText('Saved')).toBeNull();
+  expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
+  expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
   fireEvent.press(screen.getByLabelText('Go back'));
-  fireEvent.press(await screen.findByText('Saved'));
-  await screen.findByText('1 items saved');
-  fireEvent.press(screen.getByText(article.title));
-  await screen.findByText('Full story content');
-  fireEvent.press(screen.getByLabelText('Remove from saved resources'));
-  fireEvent.press(screen.getByLabelText('Go back'));
-  expect(await screen.findByText('No saved resources yet')).toBeOnTheScreen();
+  expect(await screen.findByText(article.title)).toBeOnTheScreen();
 });
 
-test('Explore → category → PageDetail → save → back → external WebView → back', async () => {
+test('Explore opens programs and In-Kind Giving without save controls', async () => {
   render(<App />);
   await screen.findByText(article.title);
   fireEvent.press(screen.getByText('Explore'));
-  fireEvent.press(await screen.findByText('Get Help'));
-  fireEvent.press(await screen.findByText('Shelter'));
+  fireEvent.press(await screen.findByText('What We Do'));
+  fireEvent.press(await screen.findByText('Emergency Services'));
   await screen.findByText('Find help here');
-  fireEvent.press(screen.getByLabelText('Save resource'));
+  expect(screen.queryByLabelText('Save resource')).toBeNull();
   fireEvent.press(screen.getByLabelText('Go back'));
-  fireEvent.press((await screen.findAllByText('Donate'))[0]);
-  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://www.trm.org/donate/'));
+  fireEvent.press(screen.getByLabelText('Back to Explore'));
+  fireEvent.press(await screen.findByText('Get Involved'));
+  fireEvent.press(await screen.findByText('In-Kind Giving'));
+  await screen.findByText('Find help here');
   fireEvent.press(screen.getByLabelText('Go back'));
-  expect(await screen.findByText('Shelter')).toBeOnTheScreen();
-});
-
-test('Tab navigation reaches Events, Volunteer and Information; Information opens and returns from WebView', async () => {
-  render(<App />);
-  await screen.findByText(article.title);
-  fireEvent.press(screen.getByText('Events'));
-  await screen.findByText('There are no upcoming events.');
-  fireEvent.press(screen.getByText('Volunteer'));
-  fireEvent.press(await screen.findByText('Returning Volunteers'));
-  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://rescue-mission.volunteerhub.com/account/signin?ReturnUrl=%2F'));
-  fireEvent.press(screen.getByLabelText('Go back'));
-  expect(await screen.findByText('Group Volunteering (5 or more people)')).toBeOnTheScreen();
-  fireEvent.press(screen.getByText('Information'));
-  expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
-  expect(screen.getByText('Donation Portal')).toBeOnTheScreen();
-  expect(screen.getByText('In-Kind Giving')).toBeOnTheScreen();
-  expect(screen.getByText('About TRM')).toBeOnTheScreen();
-  expect(screen.getByText('Help & Support')).toBeOnTheScreen();
-  fireEvent.press(await screen.findByText('Donation Portal'));
-  await waitFor(() => expect(screen.getByTestId('native-webview').props.source.uri).toBe('https://www.trm.org/donate/'));
-  fireEvent.press(screen.getByLabelText('Go back'));
-  expect(await screen.findByText('Helpful links from Tacoma Rescue Mission')).toBeOnTheScreen();
-  expect(screen.getByText('Help & Support')).toBeOnTheScreen();
-});
-
-test('Bookmarks survive unmount and remount of the app', async () => {
-  const first = render(<App />);
-  fireEvent.press(await screen.findByText(article.title));
-  await screen.findByText('Full story content');
-  fireEvent.press(screen.getByLabelText('Save resource'));
-  const [, stored] = SecureStore.setItemAsync.mock.calls.at(-1);
-  first.unmount();
-  SecureStore.getItemAsync.mockResolvedValue(stored);
-  render(<App />);
-  await screen.findByText(article.title);
-  fireEvent.press(screen.getByText('Saved'));
-  expect(await screen.findByText('1 items saved')).toBeOnTheScreen();
-  expect(screen.getByText(article.title)).toBeOnTheScreen();
-  fireEvent.press(screen.getByText(article.title));
-  await screen.findByText('Full story content');
-  fireEvent.press(screen.getByLabelText('Remove from saved resources'));
-  fireEvent.press(screen.getByLabelText('Go back'));
-  expect(await screen.findByText('No saved resources yet')).toBeOnTheScreen();
+  expect(await screen.findByText('In-Kind Giving')).toBeOnTheScreen();
 });

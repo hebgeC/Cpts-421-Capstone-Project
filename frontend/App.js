@@ -1,3 +1,4 @@
+import { colors } from './src/theme/colors';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,11 +12,8 @@ import EventsScreen from './src/screens/EventsScreen';
 import VolunteerScreen from './src/screens/VolunteerScreen';
 import ArticleScreen from './src/screens/ArticleScreen';
 import PageDetailScreen from './src/screens/PageDetailScreen';
-import InformationScreen from './src/screens/ProfileScreen';
 import DonationScreen from './src/screens/DonationScreen';
 import WebViewScreen from './src/screens/WebViewScreen';
-import BookmarksScreen from './src/screens/BookmarksScreen';
-import { SavedResourcesProvider } from './src/context/SavedResourcesContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -26,20 +24,20 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#F0F0F0',
+          backgroundColor: colors.warm,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 85 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 85 : 76,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 12,
+          paddingTop: 6,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.06,
           shadowRadius: 12,
           elevation: 8,
         },
-        tabBarActiveTintColor: '#C0392B',
-        tabBarInactiveTintColor: '#AAAAAA',
+        tabBarActiveTintColor: route.name === 'Donate' ? colors.donate : colors.primary,
+        tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
@@ -51,9 +49,7 @@ function MainTabs() {
           else if (route.name === 'Explore') iconName = focused ? 'search' : 'search-outline';
           else if (route.name === 'Events') iconName = focused ? 'calendar' : 'calendar-outline';
           else if (route.name === 'Volunteer') iconName = focused ? 'hand-left' : 'hand-left-outline';
-          else if (route.name === 'Saved') iconName = focused ? 'bookmark' : 'bookmark-outline';
           else if (route.name === 'Donate') iconName = focused ? 'heart' : 'heart-outline';
-          else if (route.name === 'Information') iconName = focused ? 'information-circle' : 'information-circle-outline';
           return <Icon name={iconName} size={22} color={color} />;
         },
       })}
@@ -62,41 +58,37 @@ function MainTabs() {
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Volunteer" component={VolunteerScreen} />
-      <Tab.Screen name="Saved" component={BookmarksScreen} />
       <Tab.Screen name="Donate" component={DonationScreen} />
-      <Tab.Screen name="Information" component={InformationScreen} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <SavedResourcesProvider>
-      <NavigationContainer>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="#FDF6F0"
-          translucent={false}
+    <NavigationContainer>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={colors.background}
+        translucent={false}
+      />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen
+          name="Article"
+          component={ArticleScreen}
+          options={{ presentation: 'card', animation: 'slide_from_right' }}
         />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen
-            name="Article"
-            component={ArticleScreen}
-            options={{ presentation: 'card', animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name="PageDetail"
-            component={PageDetailScreen}
-            options={{ presentation: 'card', animation: 'slide_from_right' }}
-          />
-          <Stack.Screen
-            name="WebView"
-            component={WebViewScreen}
-            options={{ presentation: 'card', animation: 'slide_from_right' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SavedResourcesProvider>
+        <Stack.Screen
+          name="PageDetail"
+          component={PageDetailScreen}
+          options={{ presentation: 'card', animation: 'slide_from_right' }}
+        />
+        <Stack.Screen
+          name="WebView"
+          component={WebViewScreen}
+          options={{ presentation: 'card', animation: 'slide_from_right' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }

@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React, { useState, useContext, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
@@ -76,7 +77,7 @@ export default function LoginScreen() {
               onPress={() => setWebViewVisible(false)}
               style={styles.webViewCancelBtn}
             >
-              <Icon name="close" size={22} color="#2C1810" />
+              <Icon name="close" size={22} color={colors.ink} />
             </TouchableOpacity>
             <Text style={styles.webViewTitle}>Sign In to VolunteerHub</Text>
             <View style={{ width: 38 }} />
@@ -84,7 +85,7 @@ export default function LoginScreen() {
 
           {webViewLoading && (
             <View style={styles.webViewLoadingOverlay}>
-              <ActivityIndicator size="large" color="#C0392B" />
+              <ActivityIndicator size="large" color={colors.primary} />
             </View>
           )}
 
@@ -112,7 +113,7 @@ export default function LoginScreen() {
 
       <View style={styles.topSection}>
         <View style={styles.logoCircle}>
-          <Icon name="heart" size={32} color="#C0392B" />
+          <Icon name="heart" size={32} color={colors.primary} />
         </View>
         <Text style={styles.appName}>Tacoma Rescue Mission</Text>
         <Text style={styles.tagline}>Serving our neighbors in need since 1912</Text>
@@ -156,40 +157,40 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FDF6F0' },
+  safe: { flex: 1, backgroundColor: colors.background },
 
   // ── WebView Modal ──
   webViewSafe: { flex: 1, backgroundColor: '#FFFFFF' },
   webViewHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    borderBottomWidth: 1, borderBottomColor: colors.border,
     backgroundColor: '#FFFFFF',
   },
   webViewCancelBtn: { padding: 6 },
-  webViewTitle: { fontSize: 15, fontWeight: '700', color: '#2C1810' },
+  webViewTitle: { fontSize: 15, fontWeight: '700', color: colors.ink },
   webViewLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255,255,255,0.85)',
     alignItems: 'center', justifyContent: 'center',
     zIndex: 10,
   },
-  accentBar: { height: 4, backgroundColor: '#C0392B' },
+  accentBar: { height: 4, backgroundColor: colors.secondary },
   topSection: {
     alignItems: 'center', paddingTop: 60, paddingBottom: 36, paddingHorizontal: 24,
   },
   logoCircle: {
-    width: 72, height: 72, borderRadius: 22, backgroundColor: '#FDECEA',
+    width: 72, height: 72, borderRadius: 22, backgroundColor: colors.primarySoft,
     alignItems: 'center', justifyContent: 'center', marginBottom: 16,
-    shadowColor: '#C0392B', shadowOffset: { width: 0, height: 4 },
+    shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 12, elevation: 4,
   },
   appName: {
-    fontSize: 24, fontWeight: '800', color: '#2C1810',
+    fontSize: 24, fontWeight: '800', color: colors.ink,
     letterSpacing: -0.5, textAlign: 'center',
   },
   tagline: {
-    fontSize: 13, color: '#8B6B5A', marginTop: 6,
+    fontSize: 13, color: colors.muted, marginTop: 6,
     textAlign: 'center', lineHeight: 20,
   },
   card: {
@@ -197,26 +198,26 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07, shadowRadius: 20, elevation: 5,
   },
-  cardTitle: { fontSize: 22, fontWeight: '700', color: '#2C1810', marginBottom: 6 },
-  cardSubtitle: { fontSize: 14, color: '#8B6B5A', marginBottom: 28, lineHeight: 21 },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: colors.ink, marginBottom: 6 },
+  cardSubtitle: { fontSize: 14, color: colors.muted, marginBottom: 28, lineHeight: 21 },
   loginBtn: {
-    backgroundColor: '#C0392B', borderRadius: 14, height: 52,
+    backgroundColor: colors.primary, borderRadius: 14, height: 52,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    shadowColor: '#C0392B', shadowOffset: { width: 0, height: 4 },
+    shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
   loginBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#F0F0F0' },
-  dividerText: { marginHorizontal: 12, color: '#BBBBBB', fontSize: 13 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.warm },
+  dividerText: { marginHorizontal: 12, color: colors.muted, fontSize: 13 },
   guestBtn: {
     borderRadius: 14, height: 52, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#EBEBEB', backgroundColor: '#FAFAFA',
+    borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background,
   },
-  guestBtnText: { color: '#555', fontSize: 15, fontWeight: '600' },
+  guestBtnText: { color: colors.muted, fontSize: 15, fontWeight: '600' },
   footerText: {
-    textAlign: 'center', color: '#AAAAAA', fontSize: 13,
+    textAlign: 'center', color: colors.muted, fontSize: 13,
     marginTop: 28, paddingHorizontal: 24,
   },
-  footerLink: { color: '#C0392B', fontWeight: '700' },
+  footerLink: { color: colors.primary, fontWeight: '700' },
 });

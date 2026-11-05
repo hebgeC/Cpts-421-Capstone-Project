@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import {
     Text,
     View,
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
         padding: 14,
         paddingBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: "#EBEBEB",
+        borderBottomColor: colors.border,
     },
 
     // ── Header ──
@@ -387,11 +388,11 @@ const styles = StyleSheet.create({
     monthYear: {
         fontSize: 18,
         fontWeight: "700",
-        color: "#2C1810",
+        color: colors.ink,
     },
     monthYearCaret: {
         fontSize: 12,
-        color: "#C0392B",
+        color: colors.primary,
         marginTop: 2,
     },
     navBtn: {
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
     },
     navArrow: {
         fontSize: 26,
-        color: "#C0392B",
+        color: colors.primary,
         lineHeight: 28,
     },
 
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 12,
         fontWeight: "600",
-        color: "#AAAAAA",
+        color: colors.muted,
         paddingVertical: 4,
     },
     dayCell: {
@@ -424,17 +425,17 @@ const styles = StyleSheet.create({
         margin: 2,
     },
     todayCell: {
-        backgroundColor: "#FDECEA",
+        backgroundColor: colors.primarySoft,
     },
     selectedCell: {
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
     },
     dayText: {
         fontSize: 14,
-        color: "#2C1810",
+        color: colors.ink,
     },
     todayText: {
-        color: "#C0392B",
+        color: colors.primary,
         fontWeight: "700",
     },
     selectedText: {
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
         width: 5,
         height: 5,
         borderRadius: 3,
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
         marginTop: 2,
     },
     dotSelected: {
@@ -457,19 +458,19 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         paddingVertical: 10,
         borderBottomWidth: 1,
-        borderBottomColor: "#EBEBEB",
+        borderBottomColor: colors.border,
     },
     eventHeader: {
         fontSize: 15,
         fontWeight: "700",
-        color: "#2C1810",
+        color: colors.ink,
     },
     eventSection: {
         paddingTop: 10,
     },
     noEvents: {
         fontSize: 14,
-        color: "#aaaaaa",
+        color: colors.muted,
         fontStyle: "italic",
     },
     eventScroll: {
@@ -477,21 +478,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
     },
     eventCard: {
-        backgroundColor: "#FDECEA",
+        backgroundColor: colors.primarySoft,
         borderRadius: 8,
         padding: 10,
         marginBottom: 8,
         borderLeftWidth: 3,
-        borderLeftColor: "#C0392B",
+        borderLeftColor: colors.primary,
     },
     eventTitle: {
         fontSize: 14,
         fontWeight: "600",
-        color: "#2C1810",
+        color: colors.ink,
     },
     eventTime: {
         fontSize: 12,
-        color: "#8B6B5A",
+        color: colors.muted,
         marginTop: 3,
     },
 });

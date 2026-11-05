@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { colors } from '../theme/colors';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
   Image, Linking, useWindowDimensions,
 } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import { API_BASE_URL } from '../utils/api';
-import { SavedResourcesContext } from '../context/SavedResourcesContext';
+import { getArticleById } from '../services/wordpress';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -17,16 +17,11 @@ export default function ArticleScreen({ route, navigation }) {
   const { article: initialArticle } = route.params;
   const [article, setArticle] = useState(initialArticle);
   const { width } = useWindowDimensions();
-  const { isSaved, toggleSaved } = useContext(SavedResourcesContext);
 
   useEffect(() => {
     if (initialArticle.contentHtml || !initialArticle.id) return;
     let mounted = true;
-    fetch(`${API_BASE_URL}/wpArticles/${initialArticle.id}`)
-      .then((response) => {
-        if (!response.ok) throw new Error('Request failed');
-        return response.json();
-      })
+    getArticleById(initialArticle.id)
       .then((data) => {
         if (mounted) setArticle({ ...initialArticle, ...data, kind: initialArticle.kind });
       })
@@ -38,19 +33,12 @@ export default function ArticleScreen({ route, navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
         <TouchableOpacity accessibilityLabel="Go back" style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={20} color="#2C1810" />
+          <Icon name="arrow-back" size={20} color={colors.ink} />
         </TouchableOpacity>
         <View style={styles.actionGroup}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => toggleSaved({ ...article, resourceType: 'article' })}
-            accessibilityLabel={isSaved(article) ? 'Remove from saved resources' : 'Save resource'}
-          >
-            <Icon name={isSaved(article) ? 'bookmark' : 'bookmark-outline'} size={20} color="#C0392B" />
-          </TouchableOpacity>
           {article.link ? (
             <TouchableOpacity style={styles.actionBtn} onPress={() => Linking.openURL(article.link)}>
-              <Icon name="open-outline" size={20} color="#2C1810" />
+              <Icon name="open-outline" size={20} color={colors.ink} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -61,7 +49,7 @@ export default function ArticleScreen({ route, navigation }) {
           <Image source={{ uri: article.image }} style={styles.hero} resizeMode="cover" />
         ) : (
           <View style={[styles.hero, styles.heroFallback]}>
-            <Icon name="heart" size={64} color="#C0392B" />
+            <Icon name="heart" size={64} color={colors.primary} />
           </View>
         )}
 
@@ -72,7 +60,7 @@ export default function ArticleScreen({ route, navigation }) {
             </Text>
           </View>
           <View style={styles.metaInfo}>
-            <Icon name="time-outline" size={13} color="#AAAAAA" />
+            <Icon name="time-outline" size={13} color={colors.muted} />
             <Text style={styles.metaText}>{formatDate(article.date)}</Text>
           </View>
         </View>
@@ -82,7 +70,7 @@ export default function ArticleScreen({ route, navigation }) {
         {article.author ? (
           <View style={styles.authorRow}>
             <View style={styles.authorAvatar}>
-              <Icon name="person" size={16} color="#8B6B5A" />
+              <Icon name="person" size={16} color={colors.muted} />
             </View>
             <Text style={styles.authorName}>{article.author}</Text>
           </View>
@@ -119,31 +107,31 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1, borderBottomColor: colors.warm,
   },
-  backBtn: { padding: 8, backgroundColor: '#FDF6F0', borderRadius: 12 },
+  backBtn: { padding: 8, backgroundColor: colors.background, borderRadius: 12 },
   actionGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  actionBtn: { padding: 8, backgroundColor: '#FDF6F0', borderRadius: 12 },
+  actionBtn: { padding: 8, backgroundColor: colors.background, borderRadius: 12 },
   scrollContent: { paddingBottom: 20 },
-  hero: { height: 220, backgroundColor: '#FDECEA' },
+  hero: { height: 220, backgroundColor: colors.primarySoft },
   heroFallback: { alignItems: 'center', justifyContent: 'center' },
   metaRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: 20, marginBottom: 12,
   },
-  categoryBadge: { backgroundColor: '#FDECEA', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  categoryBadgeText: { color: '#C0392B', fontSize: 12, fontWeight: '700', letterSpacing: 0.4 },
+  categoryBadge: { backgroundColor: colors.primarySoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  categoryBadgeText: { color: colors.primary, fontSize: 12, fontWeight: '700', letterSpacing: 0.4 },
   metaInfo: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText: { color: '#AAAAAA', fontSize: 12 },
-  title: { fontSize: 24, fontWeight: '800', color: '#2C1810', paddingHorizontal: 20, lineHeight: 32, marginBottom: 12 },
+  metaText: { color: colors.muted, fontSize: 12 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.ink, paddingHorizontal: 20, lineHeight: 32, marginBottom: 12 },
   authorRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 10, marginBottom: 16 },
-  authorAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center' },
-  authorName: { fontSize: 14, fontWeight: '700', color: '#2C1810' },
-  divider: { height: 1, backgroundColor: '#F5F5F5', marginHorizontal: 20, marginBottom: 20 },
+  authorAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.warm, alignItems: 'center', justifyContent: 'center' },
+  authorName: { fontSize: 14, fontWeight: '700', color: colors.ink },
+  divider: { height: 1, backgroundColor: colors.background, marginHorizontal: 20, marginBottom: 20 },
   section: { paddingHorizontal: 20, marginBottom: 20 },
-  bodyText: { fontSize: 15, color: '#4A3728', lineHeight: 25 },
+  bodyText: { fontSize: 15, color: colors.ink, lineHeight: 25 },
   ctaBox: {
-    backgroundColor: '#C0392B', marginHorizontal: 20, borderRadius: 16,
+    backgroundColor: colors.primary, marginHorizontal: 20, borderRadius: 16,
     padding: 20, marginBottom: 20,
   },
   ctaTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', marginBottom: 14 },

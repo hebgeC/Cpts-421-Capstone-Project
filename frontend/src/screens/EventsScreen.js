@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -5,7 +6,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import { API_BASE_URL } from '../utils/api';
+import { getEvents } from '../services/events';
+import ScreenHeader from '../components/ScreenHeader';
 import MonthYearPicker from '../components/MonthYearPicker';
 import CalendarDatePicker from '../components/CalendarDatePicker';
 
@@ -119,24 +121,17 @@ export default function EventsScreen() {
       let upcoming;
       let past;
       if (dateFilter === 'all') {
-        const [upcomingRes, pastRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/events?per_page=50`),
-          fetch(`${API_BASE_URL}/events?per_page=50&start_date=2000-01-01&end_date=${todayISO()}`),
+        const [upcomingJson, pastJson] = await Promise.all([
+          getEvents({ perPage: 50 }),
+          getEvents({ perPage: 50, startDate: '2000-01-01', endDate: todayISO() }),
         ]);
-        if (!upcomingRes.ok || !pastRes.ok) throw new Error('Request failed');
-        const upcomingJson = await upcomingRes.json();
-        const pastJson = await pastRes.json();
         upcoming = (upcomingJson.events || []).map(mapEvent);
         past = (pastJson.events || []).map(mapEvent).reverse();
       } else {
         const range = dateFilter === 'month'
           ? monthRange(selectedMonth.month, selectedMonth.year)
           : { start: selectedDay, end: selectedDay };
-        const response = await fetch(
-          `${API_BASE_URL}/events?per_page=100&start_date=${range.start}&end_date=${range.end}`
-        );
-        if (!response.ok) throw new Error('Request failed');
-        const data = await response.json();
+        const data = await getEvents({ perPage: 100, startDate: range.start, endDate: range.end });
         const events = (data.events || []).map(mapEvent);
         upcoming = events.filter((event) => event.dateKey >= todayISO());
         past = events.filter((event) => event.dateKey < todayISO()).reverse();
@@ -247,21 +242,19 @@ export default function EventsScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#C0392B" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>Events</Text>
-        </View>
+        <ScreenHeader title="Events" />
 
         {/* Search */}
         <View style={styles.searchRow}>
           <View style={styles.searchInputWrap}>
-            <Icon name="search-outline" size={16} color="#888" style={{ marginRight: 8 }} />
+            <Icon name="search-outline" size={16} color={colors.muted} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Enter Keyword. Search for Events by Keyword."
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={colors.muted}
               value={searchText}
               onChangeText={setSearchText}
             />
@@ -274,31 +267,31 @@ export default function EventsScreen() {
             style={[styles.viewToggleBtn, dateFilter === 'all' && styles.viewToggleBtnActive]}
             onPress={() => setDateFilter('all')}
           >
-            <Icon name="list" size={14} color={dateFilter === 'all' ? '#FFFFFF' : '#555'} />
+            <Icon name="list" size={14} color={dateFilter === 'all' ? '#FFFFFF' : colors.muted} />
             <Text style={dateFilter === 'all' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>List</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.viewToggleBtn, dateFilter === 'month' && styles.viewToggleBtnActive]}
             onPress={() => setMonthPickerVisible(true)}
           >
-            <Icon name="calendar-outline" size={14} color={dateFilter === 'month' ? '#FFFFFF' : '#555'} />
+            <Icon name="calendar-outline" size={14} color={dateFilter === 'month' ? '#FFFFFF' : colors.muted} />
             <Text style={dateFilter === 'month' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>Month</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.viewToggleBtn, dateFilter === 'day' && styles.viewToggleBtnActive]}
             onPress={() => setDayPickerVisible(true)}
           >
-            <Icon name="today-outline" size={14} color={dateFilter === 'day' ? '#FFFFFF' : '#555'} />
+            <Icon name="today-outline" size={14} color={dateFilter === 'day' ? '#FFFFFF' : colors.muted} />
             <Text style={dateFilter === 'day' ? styles.viewToggleLabelActive : styles.viewToggleLabel}>Day</Text>
           </TouchableOpacity>
         </View>
 
         {activeFilterLabel ? (
           <View style={styles.activeFilterRow}>
-            <Icon name="calendar-outline" size={15} color="#C0392B" />
+            <Icon name="calendar-outline" size={15} color={colors.primary} />
             <Text style={styles.activeFilterText}>Showing events for {activeFilterLabel}</Text>
             <TouchableOpacity onPress={() => setDateFilter('all')} style={styles.clearFilterButton}>
-              <Icon name="close-circle" size={18} color="#8B6B5A" />
+              <Icon name="close-circle" size={18} color={colors.muted} />
             </TouchableOpacity>
           </View>
         ) : null}
@@ -306,7 +299,7 @@ export default function EventsScreen() {
         {/* Loading */}
         {loading && (
           <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#C0392B" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Loading events from TRM...</Text>
           </View>
         )}
@@ -314,7 +307,7 @@ export default function EventsScreen() {
         {/* Error */}
         {!loading && error && (
           <View style={styles.errorBox}>
-            <Icon name="wifi-outline" size={24} color="#C0392B" />
+            <Icon name="wifi-outline" size={24} color={colors.primary} />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryBtn} onPress={fetchEvents}>
               <Text style={styles.retryBtnText}>Retry</Text>
@@ -382,59 +375,54 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  pageHeader: {
-    paddingHorizontal: 20, paddingTop: 18, paddingBottom: 10,
-    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
-  },
-  pageTitle: { fontSize: 26, fontWeight: '800', color: '#2C1810', letterSpacing: -0.5 },
   searchRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14, gap: 10,
-    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   searchInputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F7F7F7', borderRadius: 6,
-    borderWidth: 1, borderColor: '#DDDDDD',
+    backgroundColor: colors.background, borderRadius: 6,
+    borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 10, height: 40,
   },
-  searchInput: { flex: 1, fontSize: 13, color: '#2C1810' },
+  searchInput: { flex: 1, fontSize: 13, color: colors.ink },
   viewToggleRow: {
     flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 10,
-    gap: 8, borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   viewToggleBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 4, borderWidth: 1, borderColor: '#DDDDDD',
-    backgroundColor: '#F7F7F7',
+    borderRadius: 4, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.background,
   },
-  viewToggleBtnActive: { backgroundColor: '#C0392B', borderColor: '#C0392B' },
-  viewToggleLabel: { fontSize: 12, color: '#555', fontWeight: '600' },
+  viewToggleBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  viewToggleLabel: { fontSize: 12, color: colors.muted, fontWeight: '600' },
   viewToggleLabelActive: { fontSize: 12, color: '#FFFFFF', fontWeight: '600' },
   activeFilterRow: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
-    paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#FDF6F0',
-    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    paddingHorizontal: 20, paddingVertical: 10, backgroundColor: colors.background,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  activeFilterText: { flex: 1, fontSize: 13, color: '#4A3728', fontWeight: '600' },
+  activeFilterText: { flex: 1, fontSize: 13, color: colors.ink, fontWeight: '600' },
   clearFilterButton: { padding: 4 },
   loadingBox: { alignItems: 'center', paddingVertical: 50, gap: 14 },
-  loadingText: { fontSize: 14, color: '#888888' },
+  loadingText: { fontSize: 14, color: colors.muted },
   errorBox: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 30, gap: 12 },
-  errorText: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20 },
+  errorText: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
   retryBtn: {
-    backgroundColor: '#C0392B', borderRadius: 8,
+    backgroundColor: colors.primary, borderRadius: 8,
     paddingHorizontal: 24, paddingVertical: 10,
   },
   retryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   noUpcomingBox: { paddingHorizontal: 20, paddingVertical: 18 },
-  noUpcomingText: { fontSize: 14, color: '#555555', fontStyle: 'italic' },
-  divider: { height: 1, backgroundColor: '#EBEBEB' },
+  noUpcomingText: { fontSize: 14, color: colors.muted, fontStyle: 'italic' },
+  divider: { height: 1, backgroundColor: colors.border },
   sectionHeading: {
-    fontSize: 20, fontWeight: '800', color: '#2C1810',
+    fontSize: 20, fontWeight: '800', color: colors.ink,
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: '#EBEBEB',
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   eventRow: {
     flexDirection: 'row', paddingHorizontal: 20,
@@ -443,37 +431,37 @@ const styles = StyleSheet.create({
   dateBlock: { width: 52, alignItems: 'center', flexShrink: 0 },
   dateMonth: {
     fontSize: 11, fontWeight: '700', letterSpacing: 1,
-    color: '#FFFFFF', backgroundColor: '#C0392B',
+    color: '#FFFFFF', backgroundColor: colors.primary,
     width: 52, textAlign: 'center', paddingVertical: 4,
     borderTopLeftRadius: 4, borderTopRightRadius: 4,
   },
   dateDay: {
-    fontSize: 30, fontWeight: '800', color: '#2C1810', lineHeight: 36,
+    fontSize: 30, fontWeight: '800', color: colors.ink, lineHeight: 36,
     width: 52, textAlign: 'center',
-    borderWidth: 1, borderTopWidth: 0, borderColor: '#DDDDDD',
+    borderWidth: 1, borderTopWidth: 0, borderColor: colors.border,
     paddingBottom: 4, borderBottomLeftRadius: 4, borderBottomRightRadius: 4,
   },
   eventBody: { flex: 1 },
   eventImage: {
     width: '100%', height: 160, borderRadius: 6,
-    backgroundColor: '#F0F0F0', marginBottom: 10,
+    backgroundColor: colors.warm, marginBottom: 10,
   },
-  eventDatetime: { fontSize: 12, color: '#888888', marginBottom: 6 },
+  eventDatetime: { fontSize: 12, color: colors.muted, marginBottom: 6 },
   eventTitle: {
-    fontSize: 16, fontWeight: '800', color: '#C0392B',
+    fontSize: 16, fontWeight: '800', color: colors.primary,
     lineHeight: 22, marginBottom: 6,
   },
-  eventVenue: { fontSize: 13, fontWeight: '600', color: '#2C1810', marginBottom: 2 },
-  eventAddress: { fontSize: 12, color: '#888888', marginBottom: 8 },
-  eventDescription: { fontSize: 13, color: '#444444', lineHeight: 20, marginBottom: 8 },
-  priceText: { fontSize: 13, fontWeight: '700', color: '#2C1810' },
-  eventDivider: { height: 1, backgroundColor: '#EBEBEB', marginHorizontal: 20 },
+  eventVenue: { fontSize: 13, fontWeight: '600', color: colors.ink, marginBottom: 2 },
+  eventAddress: { fontSize: 12, color: colors.muted, marginBottom: 8 },
+  eventDescription: { fontSize: 13, color: colors.ink, lineHeight: 20, marginBottom: 8 },
+  priceText: { fontSize: 13, fontWeight: '700', color: colors.ink },
+  eventDivider: { height: 1, backgroundColor: colors.border, marginHorizontal: 20 },
   emptyState: { paddingHorizontal: 20, paddingVertical: 30, alignItems: 'center' },
-  emptyStateText: { fontSize: 14, color: '#888888', fontStyle: 'italic' },
+  emptyStateText: { fontSize: 14, color: colors.muted, fontStyle: 'italic' },
   footer: {
     marginTop: 30, paddingHorizontal: 20, paddingVertical: 20,
-    borderTopWidth: 1, borderTopColor: '#EBEBEB', gap: 10,
+    borderTopWidth: 1, borderTopColor: colors.border, gap: 10,
   },
-  footerText: { fontSize: 12, color: '#888888', lineHeight: 20 },
-  footerLink: { fontSize: 12, color: '#C0392B', fontWeight: '600', textDecorationLine: 'underline' },
+  footerText: { fontSize: 12, color: colors.muted, lineHeight: 20 },
+  footerLink: { fontSize: 12, color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' },
 });

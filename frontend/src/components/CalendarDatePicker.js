@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import React, { useEffect, useState } from 'react';
 import {
   Modal, StyleSheet, Text, TouchableOpacity, View,
@@ -64,17 +65,17 @@ export default function CalendarDatePicker({ visible, value, onConfirm, onCancel
 
           <View style={styles.monthNavigation}>
             <TouchableOpacity accessibilityLabel="Previous year" style={styles.yearButton} onPress={() => moveMonth(-12)}>
-              <Icon name="play-back" size={17} color="#8B6B5A" />
+              <Icon name="play-back" size={17} color={colors.muted} />
             </TouchableOpacity>
             <TouchableOpacity accessibilityLabel="Previous month" style={styles.navigationButton} onPress={() => moveMonth(-1)}>
-              <Icon name="chevron-back" size={20} color="#2C1810" />
+              <Icon name="chevron-back" size={20} color={colors.ink} />
             </TouchableOpacity>
             <Text style={styles.monthTitle}>{MONTHS[displayMonth]} {displayYear}</Text>
             <TouchableOpacity accessibilityLabel="Next month" style={styles.navigationButton} onPress={() => moveMonth(1)}>
-              <Icon name="chevron-forward" size={20} color="#2C1810" />
+              <Icon name="chevron-forward" size={20} color={colors.ink} />
             </TouchableOpacity>
             <TouchableOpacity accessibilityLabel="Next year" style={styles.yearButton} onPress={() => moveMonth(12)}>
-              <Icon name="play-forward" size={17} color="#8B6B5A" />
+              <Icon name="play-forward" size={17} color={colors.muted} />
             </TouchableOpacity>
           </View>
 
@@ -133,26 +134,26 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 360, backgroundColor: '#FFFFFF', borderRadius: 18, padding: 20,
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 10,
   },
-  title: { fontSize: 17, fontWeight: '800', color: '#2C1810', textAlign: 'center', marginBottom: 16 },
+  title: { fontSize: 17, fontWeight: '800', color: colors.ink, textAlign: 'center', marginBottom: 16 },
   monthNavigation: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  monthTitle: { flex: 1, textAlign: 'center', fontSize: 15, fontWeight: '700', color: '#2C1810' },
+  monthTitle: { flex: 1, textAlign: 'center', fontSize: 15, fontWeight: '700', color: colors.ink },
   navigationButton: { padding: 6 },
   yearButton: { padding: 6 },
   weekRow: { flexDirection: 'row', marginBottom: 4 },
-  weekday: { width: '14.2857%', textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#8B6B5A' },
+  weekday: { width: '14.2857%', textAlign: 'center', fontSize: 11, fontWeight: '700', color: colors.muted },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   dayCell: { width: '14.2857%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   dayButton: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  dayButtonSelected: { backgroundColor: '#C0392B' },
-  dayText: { fontSize: 14, color: '#2C1810' },
+  dayButtonSelected: { backgroundColor: colors.primary },
+  dayText: { fontSize: 14, color: colors.ink },
   dayTextSelected: { color: '#FFFFFF', fontWeight: '700' },
   actions: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 },
   actionSpacer: { flex: 1 },
   todayButton: { paddingVertical: 9, paddingHorizontal: 4 },
-  todayText: { fontSize: 14, fontWeight: '700', color: '#C0392B' },
+  todayText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   actionButton: { paddingVertical: 9, paddingHorizontal: 18, borderRadius: 8 },
-  cancelButton: { backgroundColor: '#EBEBEB' },
-  confirmButton: { backgroundColor: '#C0392B' },
-  cancelText: { fontSize: 14, color: '#8B6B5A', fontWeight: '600' },
+  cancelButton: { backgroundColor: colors.border },
+  confirmButton: { backgroundColor: colors.primary },
+  cancelText: { fontSize: 14, color: colors.muted, fontWeight: '600' },
   confirmText: { fontSize: 14, color: '#FFFFFF', fontWeight: '700' },
 });

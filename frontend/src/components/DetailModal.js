@@ -1,3 +1,4 @@
+import { colors } from '../theme/colors';
 import {
     Text,
     View,
@@ -69,7 +70,7 @@ export default function DetailModal({ visible, onClose, title, time, location, o
                                 <FontAwesome5
                                     name="map-marker-alt"
                                     size={20}
-                                    color="#555"
+                                    color={colors.muted}
                                 />
                             </Text>
                             <View style={styles.fieldContent}>
@@ -83,7 +84,7 @@ export default function DetailModal({ visible, onClose, title, time, location, o
                                 <FontAwesome5
                                     name="user"
                                     size={20}
-                                    color="#555"
+                                    color={colors.muted}
                                 />
                             </Text>
                             <View style={styles.fieldContent}>
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     },
     accentBar: {
         height: 5,
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
     },
     scrollContent: {
         padding: 24,
@@ -152,13 +153,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 22,
         fontWeight: "800",
-        color: "#2C1810",
+        color: colors.ink,
         textAlign: "center",
         lineHeight: 28,
     },
     divider: {
         height: 1,
-        backgroundColor: "#EBEBEB",
+        backgroundColor: colors.border,
         marginVertical: 16,
     },
     fieldRow: {
@@ -182,41 +183,41 @@ const styles = StyleSheet.create({
     fieldLabel: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#AAAAAA",
+        color: colors.muted,
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 2,
     },
     fieldText: {
         fontSize: 15,
-        color: "#2C1810",
+        color: colors.ink,
         lineHeight: 22,
     },
     descriptionLabel: {
         fontSize: 11,
         fontWeight: "700",
-        color: "#AAAAAA",
+        color: colors.muted,
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 8,
     },
     descriptionBox: {
-        backgroundColor: "#FDF6F0",
+        backgroundColor: colors.background,
         borderRadius: 12,
         padding: 14,
         borderWidth: 1,
-        borderColor: "#EBEBEB",
+        borderColor: colors.border,
     },
     descriptionBase: {
         fontSize: 14,
-        color: "#2C1810",
+        color: colors.ink,
         lineHeight: 22,
     },
     closeBtn: {
         margin: 16,
         marginTop: 16,
         alignSelf: "center",
-        backgroundColor: "#C0392B",
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         paddingHorizontal: 36,
         borderRadius: 10,

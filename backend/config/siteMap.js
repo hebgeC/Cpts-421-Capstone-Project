@@ -3,10 +3,10 @@
 // the site analysis saved to project memory (trm_site_architecture).
 
 const CATEGORIES = [
-  { key: "about", title: "About", icon: "📘", bg: "#EAF2FD", color: "#2980B9", description: "Who we are" },
-  { key: "what-we-do", title: "What We Do", icon: "🧭", bg: "#E8F8F5", color: "#27AE60", description: "Our programs" },
-  { key: "get-involved", title: "Get Involved", icon: "🤝", bg: "#FEF9E7", color: "#E67E22", description: "Give, serve, join" },
-  { key: "contact", title: "Contact", icon: "✉️", bg: "#FDECEA", color: "#C0392B", description: "Reach & find help" },
+  { key: "about", title: "About", icon: "📘", bg: "#F1ECE8", color: "#4C3327", description: "Who we are" },
+  { key: "what-we-do", title: "What We Do", icon: "🧭", bg: "#E1F1F3", color: "#004A53", description: "Our programs" },
+  { key: "get-involved", title: "Get Involved", icon: "🤝", bg: "#F2F3DF", color: "#8E9300", description: "Give, serve, join" },
+  { key: "contact", title: "Contact", icon: "✉️", bg: "#E1F4F7", color: "#009BBB", description: "Reach & find help" },
 ];
 
 const SITE_PAGES = [
