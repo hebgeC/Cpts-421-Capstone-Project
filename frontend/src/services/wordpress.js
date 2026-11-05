@@ -1,5 +1,5 @@
 import { CATEGORIES, SITE_PAGES } from './siteMap';
-import { decodeEntities } from './text';
+import { decodeEntities, normalizePageHtml } from './text';
 
 const WP_API_BASE_URL = (
   process.env.EXPO_PUBLIC_WP_API_BASE_URL || 'https://www.trm.org/wp-json/wp/v2'
@@ -115,7 +115,7 @@ export async function getPageBySlug(slug) {
   if (!page) throw new Error('Page not found');
   return {
     title: decodeEntities(page.title?.rendered),
-    contentHtml: page.content?.rendered || '',
+    contentHtml: normalizePageHtml(page.content?.rendered),
     modified: page.modified,
     link: page.link,
     slug,

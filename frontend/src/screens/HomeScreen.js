@@ -2,22 +2,33 @@ import { colors } from '../theme/colors';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  ActivityIndicator, Image, Platform,
+  ActivityIndicator, Image, Linking, Platform,
 } from 'react-native';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { getArticles, getUpdates, getSiteMap } from '../services/wordpress';
+import { getEvents } from '../services/events';
 import ScreenHeader from '../components/ScreenHeader';
 
 const contactPages = getSiteMap().items.filter((item) => item.category === 'contact');
+const UPDATE_FRESHNESS_MS = 90 * 24 * 60 * 60 * 1000;
 
 function formatDate(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function eventDate(value) {
+  return new Date((value || '').replace(' ', 'T'));
+}
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 export default function HomeScreen({ navigation }) {
   const [articles, setArticles] = useState([]);
   const [latestUpdate, setLatestUpdate] = useState(null);
+  const [upcomingEvent, setUpcomingEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,11 +36,27 @@ export default function HomeScreen({ navigation }) {
     try {
       setError(null);
       setLoading(true);
+      setUpcomingEvent(null);
       const [articlesData, updatesData] = await Promise.all([getArticles(1, 1), getUpdates()]);
       setArticles((articlesData.articles || []).map((a) => ({ ...a, kind: 'articles' })));
       const newest = (updatesData || []).filter((u) => u.title)
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
       setLatestUpdate(newest ? { ...newest, kind: 'updates' } : null);
+      const now = new Date();
+      const updateDate = new Date(newest?.date || '').getTime();
+      if (!Number.isFinite(updateDate) || now.getTime() - updateDate > UPDATE_FRESHNESS_MS) {
+        // Events are optional: a failed feed should not hide stories or updates.
+        const eventsData = await getEvents({ perPage: 20, startDate: localDateKey(now) })
+          .catch(() => ({ events: [] }));
+        const nextEvent = (eventsData.events || [])
+          .filter((event) => {
+            const start = eventDate(event.startDate);
+            return event.title && event.url && Number.isFinite(start.getTime())
+              && (event.allDay ? localDateKey(start) >= localDateKey(now) : start >= now);
+          })
+          .sort((a, b) => eventDate(a.startDate) - eventDate(b.startDate))[0];
+        setUpcomingEvent(nextEvent || null);
+      }
     } catch (e) {
       setError('Could not load content. Please check your connection.');
     } finally {
@@ -40,6 +67,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => { load(); }, [load]);
 
   const featured = articles[0];
+  const spotlight = upcomingEvent || latestUpdate;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -103,24 +131,37 @@ export default function HomeScreen({ navigation }) {
             )}
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Latest from TRM</Text>
+              <Text style={styles.sectionTitle}>{upcomingEvent ? 'Upcoming event' : 'Latest from TRM'}</Text>
+              {upcomingEvent && (
+                <TouchableOpacity onPress={() => navigation.navigate('Events')}>
+                  <Text style={styles.seeAll}>See all events</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            {latestUpdate ? (
+            {spotlight ? (
               <TouchableOpacity
                 style={styles.articleCard}
                 activeOpacity={0.88}
-                onPress={() => navigation.navigate('Article', { article: latestUpdate })}
+                accessibilityRole="button"
+                onPress={() => upcomingEvent
+                  ? Linking.openURL(upcomingEvent.url)
+                  : navigation.navigate('Article', { article: latestUpdate })}
               >
                 <View style={styles.articleEmoji}>
-                  <Icon name="megaphone-outline" size={24} color={colors.primary} />
+                  <Icon name={upcomingEvent ? 'calendar-outline' : 'megaphone-outline'} size={24} color={colors.primary} />
                 </View>
                 <View style={styles.articleInfo}>
-                  <Text style={styles.articleCategory}>Update</Text>
-                  <Text style={styles.articleTitle} numberOfLines={2}>{latestUpdate.title}</Text>
+                  <Text style={styles.articleCategory}>{upcomingEvent ? 'Event' : 'Update'}</Text>
+                  <Text style={styles.articleTitle} numberOfLines={2}>{spotlight.title}</Text>
                   <View style={styles.articleMeta}>
                     <Icon name="time-outline" size={12} color={colors.muted} />
-                    <Text style={styles.articleMetaText}>{formatDate(latestUpdate.date)}</Text>
+                    <Text style={styles.articleMetaText}>
+                      {upcomingEvent ? formatDate(eventDate(upcomingEvent.startDate)) : formatDate(latestUpdate.date)}
+                    </Text>
                   </View>
+                  {upcomingEvent?.venue ? (
+                    <Text style={styles.eventVenue} numberOfLines={1}>{upcomingEvent.venue}</Text>
+                  ) : null}
                 </View>
                 <Icon name="chevron-forward" size={16} color={colors.muted} />
               </TouchableOpacity>
@@ -213,6 +254,7 @@ const styles = StyleSheet.create({
   articleTitle: { fontSize: 14, fontWeight: '700', color: colors.ink, lineHeight: 20, marginBottom: 6 },
   articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   articleMetaText: { fontSize: 12, color: colors.muted },
+  eventVenue: { fontSize: 12, color: colors.muted, marginTop: 4 },
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyStateText: { fontSize: 14, color: colors.muted, fontStyle: 'italic' },
   updateEmpty: { marginHorizontal: 20, paddingVertical: 20, alignItems: 'center' },

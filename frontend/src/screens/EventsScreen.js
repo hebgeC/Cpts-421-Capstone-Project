@@ -190,7 +190,7 @@ export default function EventsScreen() {
         {/* Content */}
         <View style={styles.eventBody}>
           {event.image && (
-            <Image source={{ uri: event.image }} style={styles.eventImage} resizeMode="cover" />
+            <Image source={{ uri: event.image }} style={styles.eventImage} resizeMode="contain" />
           )}
           {event.datetime ? (
             <Text style={styles.eventDatetime}>{event.datetime}</Text>
