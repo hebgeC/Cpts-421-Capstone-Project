@@ -16,6 +16,11 @@ jest.mock('@expo/vector-icons', () => {
   const Icon = ({ name }) => <Text>{name}</Text>;
   return { Ionicons: Icon, FontAwesome5: Icon };
 });
+jest.mock('expo-image', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return { Image: (props) => <View {...props} /> };
+});
 jest.mock('react-native-webview', () => {
   const React = require('react');
   const { View } = require('react-native');
@@ -24,7 +29,7 @@ jest.mock('react-native-webview', () => {
     injectJavaScript,
     WebView: React.forwardRef((props, ref) => {
       React.useImperativeHandle(ref, () => ({ injectJavaScript }));
-      return <View {...props} testID="native-webview" />;
+      return <View {...props} testID={props.testID || 'native-webview'} />;
     }),
   };
 });

@@ -2,11 +2,12 @@ import { colors } from '../theme/colors';
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  Image, Linking, useWindowDimensions,
+  Image, Linking, Platform, useWindowDimensions,
 } from 'react-native';
 import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { getArticleById } from '../services/wordpress';
+import WordPressWebView, { escapeHtml } from '../components/WordPressWebView';
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -29,6 +30,16 @@ export default function ArticleScreen({ route, navigation }) {
     return () => { mounted = false; };
   }, [initialArticle]);
 
+  const articleHtml = `
+    ${article.image ? `<img class="app-hero" src="${escapeHtml(article.image)}" alt="">` : '<div class="app-hero-fallback">♥</div>'}
+    <p class="app-meta">${article.kind === 'updates' ? 'Update' : 'Client Story'}${article.date ? ` · ${escapeHtml(formatDate(article.date))}` : ''}</p>
+    <h1>${escapeHtml(article.title || 'Untitled')}</h1>
+    ${article.author ? `<p class="app-author">${escapeHtml(article.author)}</p>` : ''}
+    <hr>
+    ${article.contentHtml || `<p>${escapeHtml(article.excerpt || '')}</p>`}
+    ${article.link ? `<p class="app-footer"><a class="app-button" href="${escapeHtml(article.link)}">Open on trm.org</a></p>` : ''}
+  `;
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
@@ -44,6 +55,14 @@ export default function ArticleScreen({ route, navigation }) {
         </View>
       </View>
 
+      {Platform.OS !== 'web' ? (
+        <WordPressWebView
+          bodyHtml={articleHtml}
+          onLinkPress={(href) => {
+            if (/^(https?:\/\/|tel:|mailto:)/i.test(href)) Linking.openURL(href);
+          }}
+        />
+      ) : (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {article.image ? (
           <Image source={{ uri: article.image }} style={styles.hero} resizeMode="cover" />
@@ -98,6 +117,7 @@ export default function ArticleScreen({ route, navigation }) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

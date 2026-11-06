@@ -1,7 +1,8 @@
 import { colors } from '../theme/colors';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import ScreenHeader from '../components/ScreenHeader';
 
@@ -47,7 +48,8 @@ function VolunteerOptionCard({ option, onPress }) {
         <Image
           source={{ uri: option.imageUrl }}
           style={styles.photo}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
           accessibilityLabel={`${option.title} photo`}
         />
 
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
   options: { flexGrow: 1, paddingHorizontal: 20, marginTop: 8, gap: 8 },
   card: {
     flex: 1,
-    minHeight: 88,
+    minHeight: 170,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     shadowColor: colors.ink,
@@ -101,13 +103,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardInner: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    minHeight: 88,
+    minHeight: 170,
     borderRadius: 20,
     overflow: 'hidden',
   },
-  photo: StyleSheet.absoluteFillObject,
+  photo: { width: '100%', height: 108, backgroundColor: colors.primarySoft },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',

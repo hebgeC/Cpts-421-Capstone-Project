@@ -44,7 +44,7 @@ test.each(['android', 'ios'])(
 test('Home opens an article without bookmark navigation or storage', async () => {
   render(<App />);
   fireEvent.press(await screen.findByText(article.title));
-  await screen.findByText('Full story content');
+  await waitFor(() => expect(screen.getByTestId('wordpress-webview').props.source.html).toContain('Full story content'));
   expect(screen.queryByLabelText('Save resource')).toBeNull();
   expect(screen.queryByText('Saved')).toBeNull();
   expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
@@ -59,13 +59,13 @@ test('Explore opens programs and In-Kind Giving without save controls', async ()
   fireEvent.press(screen.getByText('Explore'));
   fireEvent.press(await screen.findByText('What We Do'));
   fireEvent.press(await screen.findByText('Emergency Services'));
-  await screen.findByText('Find help here');
+  await waitFor(() => expect(screen.getByTestId('wordpress-webview').props.source.html).toContain('Find help here'));
   expect(screen.queryByLabelText('Save resource')).toBeNull();
   fireEvent.press(screen.getByLabelText('Go back'));
   fireEvent.press(screen.getByLabelText('Back to Explore'));
   fireEvent.press(await screen.findByText('Get Involved'));
   fireEvent.press(await screen.findByText('In-Kind Giving'));
-  await screen.findByText('Find help here');
+  await waitFor(() => expect(screen.getByTestId('wordpress-webview').props.source.html).toContain('Find help here'));
   fireEvent.press(screen.getByLabelText('Go back'));
   expect(await screen.findByText('In-Kind Giving')).toBeOnTheScreen();
 });

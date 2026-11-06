@@ -2,8 +2,9 @@ import { colors } from '../theme/colors';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  ActivityIndicator, Image, Linking, Platform,
+  ActivityIndicator, Image as NativeImage, Linking, Platform,
 } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { getArticles, getUpdates, getSiteMap } from '../services/wordpress';
 import { getEvents } from '../services/events';
@@ -23,6 +24,34 @@ function eventDate(value) {
 
 function localDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function FeaturedStoryImage({ article }) {
+  const [uri, setUri] = useState(article.image);
+
+  useEffect(() => { setUri(article.image); }, [article.id, article.image]);
+
+  if (!uri) {
+    return (
+      <View style={styles.featuredImageBg}>
+        <Icon name="heart" size={100} color="rgba(255,255,255,0.4)" />
+      </View>
+    );
+  }
+
+  return (
+    <NativeImage
+      testID="featured-story-image"
+      source={{ uri }}
+      style={styles.featuredImage}
+      resizeMode="cover"
+      onError={({ nativeEvent }) => {
+        console.warn('Featured story photo failed to load:', uri, nativeEvent?.error);
+        setUri(uri === article.image && article.imageOriginal && article.imageOriginal !== uri
+          ? article.imageOriginal : null);
+      }}
+    />
+  );
 }
 
 export default function HomeScreen({ navigation }) {
@@ -106,13 +135,7 @@ export default function HomeScreen({ navigation }) {
                 activeOpacity={0.92}
                 onPress={() => navigation.navigate('Article', { article: featured })}
               >
-                {featured.image ? (
-                  <Image source={{ uri: featured.image }} style={styles.featuredImage} resizeMode="cover" />
-                ) : (
-                  <View style={styles.featuredImageBg}>
-                    <Icon name="heart" size={100} color="rgba(255,255,255,0.4)" />
-                  </View>
-                )}
+                <FeaturedStoryImage article={featured} />
                 <View style={styles.featuredOverlay}>
                   <View style={styles.featuredTag}>
                     <Text style={styles.featuredTagText}>FEATURED</Text>
@@ -147,9 +170,13 @@ export default function HomeScreen({ navigation }) {
                   ? Linking.openURL(upcomingEvent.url)
                   : navigation.navigate('Article', { article: latestUpdate })}
               >
-                <View style={styles.articleEmoji}>
-                  <Icon name={upcomingEvent ? 'calendar-outline' : 'megaphone-outline'} size={24} color={colors.primary} />
-                </View>
+                {!upcomingEvent && latestUpdate?.image ? (
+                  <ExpoImage source={{ uri: latestUpdate.imageThumbnail || latestUpdate.image }} style={styles.articleEmoji} contentFit="cover" cachePolicy="memory-disk" />
+                ) : (
+                  <View style={styles.articleEmoji}>
+                    <Icon name={upcomingEvent ? 'calendar-outline' : 'megaphone-outline'} size={24} color={colors.primary} />
+                  </View>
+                )}
                 <View style={styles.articleInfo}>
                   <Text style={styles.articleCategory}>{upcomingEvent ? 'Event' : 'Update'}</Text>
                   <Text style={styles.articleTitle} numberOfLines={2}>{spotlight.title}</Text>
@@ -222,7 +249,7 @@ const styles = StyleSheet.create({
     height: 220, backgroundColor: colors.primary,
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8,
   },
-  featuredImage: { ...StyleSheet.absoluteFillObject },
+  featuredImage: { width: '100%', height: 220 },
   featuredImageBg: {
     ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center',
   },

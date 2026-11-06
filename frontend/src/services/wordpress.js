@@ -42,6 +42,7 @@ function mapPost(post) {
     date: post.date,
     link: post.link,
     image,
+    imageOriginal: media?.source_url || image,
     imageThumbnail: media?.media_details?.sizes?.thumbnail?.source_url || image,
     author: post._embedded?.author?.[0]?.name || null,
   };
@@ -58,7 +59,7 @@ function mapResource(post) {
 export async function getUpdates() {
   const { data } = await getJson('/posts', {
     categories: UPDATES_CATEGORY_ID, per_page: 20,
-    _fields: 'id,title,excerpt,date,link,categories',
+    _embed: POST_EMBED, _fields: LIST_FIELDS,
   });
   return data.map(mapPost);
 }

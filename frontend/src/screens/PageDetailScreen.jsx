@@ -1,13 +1,13 @@
 import { colors } from '../theme/colors';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  ActivityIndicator, Linking, useWindowDimensions,
+  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
+  ActivityIndicator, Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import RenderHTML from 'react-native-render-html';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { getPageBySlug } from '../services/wordpress';
+import WordPressWebView, { escapeHtml } from '../components/WordPressWebView';
 
 const SHELTER_PHONE = '2533834493';
 
@@ -20,7 +20,6 @@ export default function PageDetailScreen() {
   const navigation = useNavigation();
   const { params } = useRoute();
   const { slug, title } = params;
-  const { width } = useWindowDimensions();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,13 +39,27 @@ export default function PageDetailScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleLinkPress = (event, href) => {
-    if (href.startsWith('tel:') || href.startsWith('mailto:')) {
+  const handleLinkPress = (href) => {
+    if (/^(tel|mailto):/i.test(href)) {
       Linking.openURL(href);
       return;
     }
-    navigation.navigate('WebView', { url: href, title: data?.title || title });
+    if (href === data?.link) {
+      Linking.openURL(href);
+      return;
+    }
+    if (/^https?:\/\//i.test(href)) {
+      navigation.navigate('WebView', { url: href, title: data?.title || title });
+    }
   };
+
+  const pageHtml = data ? `
+    <h1>${escapeHtml(data.title)}</h1>
+    ${data.modified ? `<p class="app-updated">Last updated ${escapeHtml(formatDate(data.modified))}</p>` : ''}
+    ${slug === 'emergency-services' ? `<p><a class="app-button" href="tel:${SHELTER_PHONE}">Call 253-383-4493</a></p>` : ''}
+    ${data.contentHtml}
+    ${data.link ? `<p class="app-footer"><a class="app-button" href="${escapeHtml(data.link)}">View full page on trm.org</a></p>` : ''}
+  ` : '';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -74,41 +87,7 @@ export default function PageDetailScreen() {
       )}
 
       {!loading && !error && data && (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>{data.title}</Text>
-          {data.modified ? (
-            <Text style={styles.updated}>Last updated {formatDate(data.modified)}</Text>
-          ) : null}
-
-          {slug === 'emergency-services' ? (
-            <TouchableOpacity
-              style={styles.callCard}
-              onPress={() => Linking.openURL(`tel:${SHELTER_PHONE}`)}
-              activeOpacity={0.85}
-            >
-              <Icon name="call-outline" size={18} color={colors.primary} />
-              <Text style={styles.callText}>253-383-4493</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          <RenderHTML
-            contentWidth={width - 40}
-            source={{ html: data.contentHtml }}
-            baseStyle={styles.bodyText}
-            renderersProps={{
-              a: { onPress: handleLinkPress },
-            }}
-          />
-
-          {data.link ? (
-            <TouchableOpacity style={styles.linkBtn} onPress={() => Linking.openURL(data.link)} activeOpacity={0.9}>
-              <Icon name="open-outline" size={16} color="#FFFFFF" />
-              <Text style={styles.linkBtnText}>View full page on trm.org</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          <View style={{ height: 40 }} />
-        </ScrollView>
+        <WordPressWebView bodyHtml={pageHtml} onLinkPress={handleLinkPress} />
       )}
     </SafeAreaView>
   );
@@ -129,19 +108,4 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
   retryBtn: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 },
   retryBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  scrollContent: { padding: 20 },
-  title: { fontSize: 24, fontWeight: '800', color: colors.ink, marginBottom: 4 },
-  updated: { fontSize: 12, color: colors.muted, marginBottom: 16 },
-  callCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: colors.primarySoft, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 20, alignSelf: 'flex-start',
-  },
-  callText: { fontSize: 15, fontWeight: '700', color: colors.primary },
-  bodyText: { fontSize: 15, color: colors.ink, lineHeight: 25 },
-  linkBtn: {
-    marginTop: 20, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 14,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-  },
-  linkBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 });

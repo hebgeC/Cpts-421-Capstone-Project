@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Tacoma Rescue Mission",
-    "slug": "tacoma-rescue-mission",
+    "slug": "trm",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -17,20 +17,24 @@
         "backgroundColor": "#F7F6F2"
       }
     },
-    "splash": {
-      "backgroundColor": "#F7F6F2"
-    },
     "plugins": [
       "expo-web-browser",
       "expo-secure-store",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F7F6F2"
+        }
+      ],
+      "expo-image"
     ],
     "extra": {
       "eas": {
-        "projectId": "e7530b94-17bc-41fd-bb3d-9862d4e6cac8"
+        "projectId": "0475502e-e681-441e-8838-c14fd7ba5163"
       }
     },
-    "owner": "efraziers-team"
+    "owner": "connor.chase"
   }
 }

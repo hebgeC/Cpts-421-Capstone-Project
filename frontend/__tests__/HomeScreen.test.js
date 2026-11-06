@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 import HomeScreen from '../src/screens/HomeScreen';
 import { navigation } from '../test/navigation';
-import { article, update, mockApi } from '../test/helpers';
+import { article, update, mockApi, wpPost } from '../test/helpers';
 
 const upcomingEvent = {
   id: 30, title: 'Community dinner', startDate: '2026-11-12 17:00:00',
@@ -32,6 +32,22 @@ test('Home opens the featured article, latest update, and both contact pages', a
   expect(navigation.navigate).toHaveBeenLastCalledWith('PageDetail', { slug: 'need-help', title: 'Need Help?' });
   fireEvent.press(screen.getByText('See all'));
   expect(navigation.navigate).toHaveBeenLastCalledWith('Explore', { section: 'articles' });
+});
+
+test('Home displays the fetched featured photo and retries its original file on failure', async () => {
+  const post = wpPost(article);
+  post._embedded['wp:featuredmedia'] = [{
+    source_url: 'https://www.trm.org/full.jpg',
+    media_details: { sizes: { medium_large: { source_url: 'https://www.trm.org/medium.jpg' } } },
+  }];
+  mockApi({ '/wpArticles': { articles: [post] } });
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
+  render(<HomeScreen navigation={navigation} />);
+  const photo = await screen.findByTestId('featured-story-image');
+  expect(photo.props.source.uri).toBe('https://www.trm.org/medium.jpg');
+  expect(photo.props.style).toEqual(expect.objectContaining({ width: '100%', height: 220 }));
+  fireEvent(photo, 'error', { nativeEvent: { error: 'Image request failed' } });
+  expect(screen.getByTestId('featured-story-image').props.source.uri).toBe('https://www.trm.org/full.jpg');
 });
 
 test('Home shows an empty state for no stories and excludes untitled updates', async () => {

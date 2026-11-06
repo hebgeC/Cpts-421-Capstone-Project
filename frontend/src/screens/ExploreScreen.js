@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text,
+  ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text,
   TouchableOpacity, View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { getArticles, getSiteMap } from '../services/wordpress';
@@ -178,7 +179,7 @@ export default function ExploreScreen({ navigation, route }) {
                 {!loading && !error && articles.length === 0 && <Text style={styles.emptyText}>No articles available right now.</Text>}
                 {!loading && !error && articles.map((article) => (
                   <TouchableOpacity key={article.id} style={styles.listCard} activeOpacity={0.88} accessibilityRole="button" onPress={() => navigation.navigate('Article', { article })}>
-                    {article.image ? <Image source={{ uri: article.imageThumbnail || article.image }} style={styles.listImage} resizeMode="cover" />
+                    {article.image ? <Image source={{ uri: article.imageThumbnail || article.image }} style={styles.listImage} contentFit="cover" cachePolicy="memory-disk" />
                       : <View style={styles.listIcon}><Icon name="document-text-outline" size={22} color={colors.primary} /></View>}
                     <View style={styles.listInfo}>
                       <Text style={styles.listLabel}>CLIENT STORY</Text>

@@ -59,9 +59,19 @@ test('Post mapping uses WordPress image sizes for cards and thumbnails', async (
   expect(fetch).toHaveBeenCalledWith(expect.stringContaining('per_page=5'));
   expect(result.articles[0]).toEqual(expect.objectContaining({
     image: 'https://www.trm.org/medium.jpg',
+    imageOriginal: 'https://www.trm.org/full.jpg',
     imageThumbnail: 'https://www.trm.org/thumb.jpg',
     contentHtml: '',
   }));
+});
+
+test('Updates request featured media so update photos can load', async () => {
+  const post = wpPost({ id: 10, title: 'Update', kind: 'updates' });
+  post._embedded['wp:featuredmedia'] = [{ source_url: 'https://www.trm.org/update.jpg' }];
+  fetch.mockResolvedValueOnce(response([post]));
+  const updates = await getUpdates();
+  expect(fetch).toHaveBeenCalledWith(expect.stringContaining('_embed=wp%3Afeaturedmedia%2Cauthor'));
+  expect(updates[0].image).toBe('https://www.trm.org/update.jpg');
 });
 
 test('Events service maps the public Events Calendar response', async () => {

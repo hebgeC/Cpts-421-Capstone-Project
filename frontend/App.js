@@ -66,11 +66,7 @@ function MainTabs() {
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={colors.background}
-        translucent={false}
-      />
+      <StatusBar barStyle="dark-content" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen
