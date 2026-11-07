@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Tacoma Rescue Mission",
+    "slug": "trm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tacomarescuemission"
+    },
+    "android": {
+      "package": "com.tacomarescuemission",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#F7F6F2"
+      }
+    },
+    "plugins": [
+      "expo-web-browser",
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F7F6F2"
+        }
+      ],
+      "expo-image"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0475502e-e681-441e-8838-c14fd7ba5163"
+      }
+    },
+    "owner": "connor.chase"
+  }
+}
