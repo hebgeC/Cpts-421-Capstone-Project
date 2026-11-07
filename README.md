@@ -16,7 +16,7 @@ Articles and WordPress pages render their content in the app and offer links to 
 
 ## Start the app
 
-Install Node.js 20 or newer, then run from this directory:
+Install Node.js 24 LTS (24.3 or newer), then run from this directory:
 
 ```powershell
 npm install
@@ -24,7 +24,9 @@ npm --prefix frontend install
 npm start
 ```
 
-Expo prints a QR code for Expo Go. Press `a` for an Android emulator or `w` for the web build. On macOS with Xcode and CocoaPods set up, `npm --prefix frontend run ios` builds and runs the iOS app.
+Expo prints a QR code for Expo Go. Install the SDK 58 version of [Expo Go](https://expo.dev/go) on your phone and scan the code. Press `a` for an Android emulator or `w` for the web build.
+
+The checked-in `frontend/ios` and `frontend/android` projects contain native files from an earlier SDK. Regenerate or migrate them before using `expo run:ios`, `expo run:android`, or EAS Build.
 
 The active app requires internet access to `https://www.trm.org`. It does not need a local backend or API credentials. To use a WordPress fixture or staging service, set `EXPO_PUBLIC_WP_API_BASE_URL` to its `/wp-json/wp/v2` URL. Set `EXPO_PUBLIC_EVENTS_API_URL` to the full Events Calendar endpoint when needed.
 
